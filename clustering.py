@@ -95,7 +95,7 @@ def visualize_with_PCA(X,optimal_clusters=7):
     plt.show()
 
 def cluster_main():
-    X = load_and_preprocess_user_data(full_data=True,enrich=False)
+    X = load_and_preprocess_user_data(full_data=True)
     user_clustering_kmeans(X)
     visualize_with_PCA(X)
 
