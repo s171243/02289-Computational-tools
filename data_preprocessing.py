@@ -40,7 +40,7 @@ def one_hot_encode(df,column_names=['gender','is_self_coach']):
 def extract_user_features(df_users):
     """
     not finished.
-    intendend purpose: extract user features from problmes.
+    intendend purpose: extract user features from problems. Potentially using map_reduce
     # exercise_per_level
     # avg_time_spend
     # avg_correct
@@ -51,3 +51,10 @@ def extract_user_features(df_users):
     df_problems = pd.read_csv('data/Log_Problem_subset.csv')
     for user in users:
         pass
+
+def extract_problem_features(df_problems):
+    """
+
+    :param df_problems:
+    :return:
+    """

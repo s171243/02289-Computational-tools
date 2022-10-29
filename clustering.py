@@ -1,42 +1,8 @@
-from sklearn.cluster import KMeans, AgglomerativeClustering, DBSCAN
-from sklearn.preprocessing import OneHotEncoder
+from sklearn.cluster import KMeans
 from sklearn.decomposition import PCA
-import numpy as np
-import pandas as pd
 import matplotlib.pyplot as plt
-from class_definitions import User,Problem,Content
-from data_preprocessing import scale, one_hot_encode
+from dataloader import load_and_preprocess_user_data
 
-
-
-
-def load_and_preprocess_user_data(full_data=False,user_features=[]):
-    """
-    Load user data (whole or subset), pick relevant user features, one-hot-encode (not a general implem.), scale data
-    :param full_data: user dataframe
-    :param user_features: features to be used and preprocessed
-    :return: user dataframe ready for clustering
-    """
-    if full_data:
-        df_user = pd.read_csv('data/Info_UserData.csv')
-    else:
-        df_user = pd.read_csv('data/Info_UserData_subset.csv')
-
-    if len(user_features)==0:
-        user_features = ['points', 'badges_cnt', 'user_grade', 'has_teacher_cnt', 'has_student_cnt', 'belongs_to_class_cnt',
-         'has_class_cnt']
-
-    #Select relevant clustering features (except for columns that need encoded)
-    X = df_user[user_features]
-    #We need gender & is_self_coach to be onehotencoded
-    columns_to_be_encoded = df_user[['gender','is_self_coach']]
-    columns_to_be_encoded['gender'] = columns_to_be_encoded['gender'].fillna("unspecified")
-    columns_encoded, column_names, enc = one_hot_encode(columns_to_be_encoded)
-
-    df_one_hot_encoded = pd.concat([X,columns_encoded],axis=1)
-    df_one_hot_encoded_and_scaled = scale(df_one_hot_encoded)
-
-    return df_one_hot_encoded_and_scaled
 
 def user_clustering_kmeans(X):
     """
@@ -101,3 +67,4 @@ def cluster_main():
 
 if __name__ == "__main__":
     cluster_main()
+    pass
