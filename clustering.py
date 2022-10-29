@@ -1,7 +1,9 @@
 from sklearn.cluster import KMeans
 from sklearn.decomposition import PCA
 import matplotlib.pyplot as plt
-from data.data_preprocessing import load_and_preprocess_user_data
+from data.data_preprocessing import load_and_preprocess_user_data,preprocess_df
+from data.data_loader import load_data_raw
+from data.feature_categorization import U_features,Ex_features,Pr_features
 
 
 def user_clustering_kmeans(X):
@@ -61,10 +63,13 @@ def visualize_with_PCA(X,optimal_clusters=7):
     plt.show()
 
 def cluster_main():
-    X = load_and_preprocess_user_data(full_data=True)
-    user_clustering_kmeans(X)
-    visualize_with_PCA(X)
-
+    df_u, _, _= load_data_raw(subset=True)
+    user_features = U_features()
+    preprocess_df(df=df_u, o_features=user_features)
+    # X = load_and_preprocess_user_data(df_u)
+    # user_clustering_kmeans(X)
+    # visualize_with_PCA(X)
+#
 if __name__ == "__main__":
     cluster_main()
     pass
