@@ -1,7 +1,7 @@
 from sklearn.cluster import KMeans
 from sklearn.decomposition import PCA
 import matplotlib.pyplot as plt
-from dataloader import load_and_preprocess_user_data
+from data.data_preprocessing import load_and_preprocess_user_data
 
 
 def user_clustering_kmeans(X):
