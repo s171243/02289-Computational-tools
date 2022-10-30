@@ -1,7 +1,7 @@
 from sklearn.cluster import KMeans
 from sklearn.decomposition import PCA
 import matplotlib.pyplot as plt
-from data.data_preprocessing import load_and_preprocess_user_data,preprocess_df
+from data.data_preprocessing import preprocess_df
 from data.data_loader import load_data_raw
 from data.feature_categorization import U_features,Ex_features,Pr_features
 
