@@ -66,7 +66,6 @@ def cluster_main():
     df_u, _, _= load_data_raw(subset=True)
     user_features = U_features()
     X = preprocess_df(df=df_u, o_features=user_features)
-    # X = load_and_preprocess_user_data(df_u)
     #remove meta data:
     X = X.drop(['uuid'],axis=1)
     user_clustering_kmeans(X)
