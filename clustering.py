@@ -26,7 +26,7 @@ def user_clustering_kmeans(X):
     plt.grid(True)
     plt.show()
 
-def visualize_with_PCA(X,optimal_clusters=7):
+def visualize_with_PCA(X,optimal_clusters=4):
     """
     Visualize clusters with PCA, given the optimal amount of clusters found using the graph produced by the function user_clustering_kmeans()
     :param X:
@@ -65,10 +65,12 @@ def visualize_with_PCA(X,optimal_clusters=7):
 def cluster_main():
     df_u, _, _= load_data_raw(subset=True)
     user_features = U_features()
-    preprocess_df(df=df_u, o_features=user_features)
+    X = preprocess_df(df=df_u, o_features=user_features)
     # X = load_and_preprocess_user_data(df_u)
-    # user_clustering_kmeans(X)
-    # visualize_with_PCA(X)
+    #remove meta data:
+    X = X.drop(['uuid'],axis=1)
+    user_clustering_kmeans(X)
+    visualize_with_PCA(X)
 #
 if __name__ == "__main__":
     cluster_main()
