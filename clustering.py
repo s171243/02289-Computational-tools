@@ -39,7 +39,7 @@ def visualize_with_PCA(X, optimal_clusters=10):
     y = kmeans.predict(X)
 
     fig = plt.figure(1, figsize=(8, 6))
-    ax = fig.add_subplot(111, projection="3d", elev=-150, azim=200)  # azim=110
+    ax = fig.add_subplot(111, projection="3d", elev=15, azim=200)  # azim=110
 
     pca = PCA(n_components=3)
     X_reduced = pca.fit_transform(X)

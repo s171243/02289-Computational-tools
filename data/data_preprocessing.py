@@ -119,6 +119,10 @@ def extract_additional_user_features(df_u, df_problems, df_content):
     """
 
     # Get features based on content
+    remove_outliers_by_quantile(df_problems,
+                                columns=['problem_number', 'exercise_problem_repeat_session', 'total_sec_taken',
+                                         'total_attempt_cnt'], quantiles=[0.82, 0.82, 0.82, 0.82])
+
     problem_content = df_problems.merge(df_content)
     encoded_df, cols = ordinal_encode(problem_content[["difficulty", "learning_stage"]],
                                       column_names=["difficulty", "learning_stage"])
@@ -126,11 +130,18 @@ def extract_additional_user_features(df_u, df_problems, df_content):
     problem_content_grouped = problem_content.groupby("uuid").agg(
         {"is_correct": "mean", "total_sec_taken": "mean", "upid": "count", "level": ["mean", "max"],
          "used_hint_cnt": "mean", "difficulty": "mean", "learning_stage": "mean"})
-    problem_content_grouped.columns = ["correct_percentage", "time_spent", "problems_attempted", "average_level", "max_level",
-                                "average_hints", "avg_difficulty", "avg_learning_stage"]
+    problem_content_grouped.columns = ["correct_percentage", "time_spent", "problems_attempted", "average_level",
+                                       "max_level",
+                                       "average_hints", "avg_difficulty", "avg_learning_stage"]
+    remove_outliers_by_quantile(problem_content_grouped,
+                                columns=["correct_percentage", "time_spent", "problems_attempted", "average_level",
+                                         "max_level", "average_hints", "avg_difficulty", "avg_learning_stage"],
+                                quantiles=[0.82, 0.82, 0.82, 0.82])
+
     users = df_u.merge(problem_content_grouped, left_on="uuid", right_on="uuid")
 
     return users
+
 
 def extract_additional_problem_features(df_ex):
     """
