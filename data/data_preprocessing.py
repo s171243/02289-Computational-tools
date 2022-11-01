@@ -97,7 +97,7 @@ def one_hot_encode(df, column_names=['gender', 'is_self_coach']):
     :param column_names: names of the columns to be one-hot-encoded
     :return: one-hot-encoded columns ready to be concatenated with original dataframe
     """
-    enc = OneHotEncoder(drop='first')
+    enc = OneHotEncoder()
     enc.fit(df)
     print(enc.categories_)
     column_names = enc.get_feature_names(column_names)
@@ -107,7 +107,7 @@ def one_hot_encode(df, column_names=['gender', 'is_self_coach']):
     return df_encoded, column_names, enc
 
 
-def extract_additional_user_features(df_u):
+def extract_additional_user_features(df_u, df_problems, df_content):
     """
     not finished.
     intendend purpose: extract user features from problems. Potentially using map_reduce
@@ -117,11 +117,20 @@ def extract_additional_user_features(df_u):
     # problem_solved
     :return:
     """
-    users = df_u['uucid']
-    df_problems = pd.read_csv('csv_files/Log_Problem_subset.csv')
-    for u in users:
-        pass
 
+    # Get features based on content
+    problem_content = df_problems.merge(df_content)
+    encoded_df, cols = ordinal_encode(problem_content[["difficulty", "learning_stage"]],
+                                      column_names=["difficulty", "learning_stage"])
+    problem_content[cols] = encoded_df[cols]
+    problem_content_grouped = problem_content.groupby("uuid").agg(
+        {"is_correct": "mean", "total_sec_taken": "mean", "upid": "count", "level": ["mean", "max"],
+         "used_hint_cnt": "mean", "difficulty": "mean", "learning_stage": "mean"})
+    problem_content_grouped.columns = ["correct_percentage", "time_spent", "problems_attempted", "average_level", "max_level",
+                                "average_hints", "avg_difficulty", "avg_learning_stage"]
+    users = df_u.merge(problem_content_grouped, left_on="uuid", right_on="uuid")
+
+    return users
 
 def extract_additional_problem_features(df_ex):
     """

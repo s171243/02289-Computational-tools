@@ -38,7 +38,8 @@ class Ex_features():
 
 class U_features():
     def __init__(self, features=['points', 'badges_cnt', 'user_grade', 'has_teacher_cnt', 'has_student_cnt',
-                                 'belongs_to_class_cnt', 'has_class_cnt'],
+                                 'belongs_to_class_cnt', 'has_class_cnt', "correct_percentage", "time_spent", "problems_attempted", "average_level", "max_level",
+                                "average_hints", "avg_difficulty", "avg_learning_stage"],
                  features_to_be_time_encoded=['first_login_date_TW'], features_to_be_OR_encoded=[],
                  features_to_be_OH_encoded=['gender', 'user_city', 'is_self_coach'], features_meta=['uuid']):
         self.features = features

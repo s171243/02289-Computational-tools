@@ -1,7 +1,8 @@
+import pandas as pd
 from sklearn.cluster import KMeans
 from sklearn.decomposition import PCA
 import matplotlib.pyplot as plt
-from data.data_preprocessing import preprocess_df
+from data.data_preprocessing import preprocess_df, extract_additional_user_features
 from data.data_loader import load_data_raw
 from data.feature_categorization import U_features, Ex_features, Pr_features
 
@@ -27,7 +28,7 @@ def user_clustering_kmeans(X):
     plt.show()
 
 
-def visualize_with_PCA(X, optimal_clusters=4):
+def visualize_with_PCA(X, optimal_clusters=10):
     """
     Visualize clusters with PCA, given the optimal amount of clusters found using the graph produced by the function user_clustering_kmeans()
     :param X:
@@ -42,7 +43,7 @@ def visualize_with_PCA(X, optimal_clusters=4):
 
     pca = PCA(n_components=3)
     X_reduced = pca.fit_transform(X)
-    print(pca.components_, "\n", X.columns, "\n", pca.explained_variance_ratio_)
+    print(pca.components_, "\n", X.columns, "\n", pca.explained_variance_ratio_, pca.explained_variance_ratio_.cumsum())
 
     ax.scatter(
         X_reduced[:, 0],
@@ -65,10 +66,11 @@ def visualize_with_PCA(X, optimal_clusters=4):
 
 
 def cluster_main():
-    df_u, _, _ = load_data_raw(subset=True)
+    df_u, df_pr, df_c = load_data_raw(subset=True)
+    print("data loaded")
+    X = extract_additional_user_features(df_u, df_pr, df_c)
     user_features = U_features()
-    X = preprocess_df(df=df_u, o_features=user_features)
-    # remove meta data:
+    X = preprocess_df(df=X, o_features=user_features)
     X = X.drop(['uuid'], axis=1)
     user_clustering_kmeans(X)
     visualize_with_PCA(X)
