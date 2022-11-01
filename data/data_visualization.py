@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 import pandas as pd
 
+
 def plot_columns_of_df(df):
     for column in df.columns:
         plt.subplot(1, 2, 1)
@@ -10,6 +11,7 @@ def plot_columns_of_df(df):
         plt.boxplot(df[column])
         plt.legend([(key, round(val, 2)) for key, val in df[column].describe().iteritems()])
         plt.show()
+
 
 if __name__ == "__main__":
     pass

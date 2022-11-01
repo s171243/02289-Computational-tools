@@ -3,7 +3,7 @@ from sklearn.decomposition import PCA
 import matplotlib.pyplot as plt
 from data.data_preprocessing import preprocess_df
 from data.data_loader import load_data_raw
-from data.feature_categorization import U_features,Ex_features,Pr_features
+from data.feature_categorization import U_features, Ex_features, Pr_features
 
 
 def user_clustering_kmeans(X):
@@ -14,19 +14,20 @@ def user_clustering_kmeans(X):
     """
     inertias = []
     max_clusters = 25
-    for i in range(1,max_clusters):
-        kmeans = KMeans(n_clusters=i, random_state=0,max_iter=500).fit(X)
+    for i in range(1, max_clusters):
+        kmeans = KMeans(n_clusters=i, random_state=0, max_iter=500).fit(X)
         # kmeans.labels_
         # kmeans.cluster_centers_
         inertias.append(kmeans.inertia_)
-    plt.plot(list(range(1,max_clusters)),inertias)
+    plt.plot(list(range(1, max_clusters)), inertias)
     plt.title("intertia of kmeans")
     plt.xlabel("n_clusters")
     plt.ylabel("Inertia")
     plt.grid(True)
     plt.show()
 
-def visualize_with_PCA(X,optimal_clusters=4):
+
+def visualize_with_PCA(X, optimal_clusters=4):
     """
     Visualize clusters with PCA, given the optimal amount of clusters found using the graph produced by the function user_clustering_kmeans()
     :param X:
@@ -37,11 +38,11 @@ def visualize_with_PCA(X,optimal_clusters=4):
     y = kmeans.predict(X)
 
     fig = plt.figure(1, figsize=(8, 6))
-    ax = fig.add_subplot(111, projection="3d", elev=-150, azim=200) #azim=110
+    ax = fig.add_subplot(111, projection="3d", elev=-150, azim=200)  # azim=110
 
     pca = PCA(n_components=3)
     X_reduced = pca.fit_transform(X)
-    print(pca.components_,"\n",X.columns,"\n",pca.explained_variance_ratio_)
+    print(pca.components_, "\n", X.columns, "\n", pca.explained_variance_ratio_)
 
     ax.scatter(
         X_reduced[:, 0],
@@ -62,14 +63,17 @@ def visualize_with_PCA(X,optimal_clusters=4):
     ax.w_zaxis.set_ticklabels([])
     plt.show()
 
+
 def cluster_main():
-    df_u, _, _= load_data_raw(subset=True)
+    df_u, _, _ = load_data_raw(subset=True)
     user_features = U_features()
     X = preprocess_df(df=df_u, o_features=user_features)
-    #remove meta data:
-    X = X.drop(['uuid'],axis=1)
+    # remove meta data:
+    X = X.drop(['uuid'], axis=1)
     user_clustering_kmeans(X)
     visualize_with_PCA(X)
+
+
 #
 if __name__ == "__main__":
     cluster_main()

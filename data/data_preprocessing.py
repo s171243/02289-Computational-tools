@@ -1,20 +1,16 @@
-from sklearn.preprocessing import OneHotEncoder, StandardScaler, MinMaxScaler,MaxAbsScaler
-import pandas as pd,numpy as np
+from sklearn.preprocessing import OneHotEncoder, StandardScaler, MinMaxScaler, MaxAbsScaler
+import pandas as pd, numpy as np
 from tqdm import tqdm
-from data.feature_categorization import U_features,Ex_features,Pr_features
-
-
+from data.feature_categorization import U_features, Ex_features, Pr_features
 
 
 ####Preproccesing steps
-#0. Load data
-#1. Categorize features and encode accordingly
-#2. Handle missing data
-#3. Visualize
-#4. Identify and remove outliers
-#5. Potentially enrich data with feature engineering
-
-
+# 0. Load data
+# 1. Categorize features and encode accordingly
+# 2. Handle missing data
+# 3. Visualize
+# 4. Identify and remove outliers
+# 5. Potentially enrich data with feature engineering
 
 def scale(df, scaler="standard"):
     """
@@ -34,7 +30,8 @@ def scale(df, scaler="standard"):
     scaled = scaler.fit_transform(df)
     return pd.DataFrame(scaled, columns=df.columns)
 
-def unix_encode(df, column_names =[]):
+
+def unix_encode(df, column_names=[]):
     """
     Encode date to unix format (sec/min/hour since unix epoch), that can be used for clustering/prediction
     A kind of ugly implementation trying to speed up to_datetime by providing the relevant time formats (There is a 10-100x speed up to give correct format)
@@ -43,14 +40,14 @@ def unix_encode(df, column_names =[]):
     :return:
     """
     time_columns = np.array([])
-    t_formats = ['%Y-%m-%d','%Y-%m-%d %H:%M:%S %Z']
+    t_formats = ['%Y-%m-%d', '%Y-%m-%d %H:%M:%S %Z']
     for column in column_names:
         success = False
         # temp = (pd.to_datetime(df[column].iloc[:, 0]) - pd.Timestamp("1970-01-01"))
         for t_format in t_formats:
             if not success:
                 try:
-                    temp = pd.to_datetime(df[column],format=t_format) # Takes 15 sec for subset on df_pr
+                    temp = pd.to_datetime(df[column], format=t_format)  # Takes 15 sec for subset on df_pr
                     success = True
                 except:
                     print("incorrect time format {}".format(t_format))
@@ -62,9 +59,10 @@ def unix_encode(df, column_names =[]):
         else:
             time_columns = np.vstack((time_columns, temp))
 
-    return pd.DataFrame(time_columns.T,columns=column_names)
+    return pd.DataFrame(time_columns.T, columns=column_names)
 
-def ordinal_encode(df, column_names = []):
+
+def ordinal_encode(df, column_names=[]):
     """
       ordinal-encode features
       :param df: dataframe with only the columns to be one-hot-encoded
@@ -74,15 +72,16 @@ def ordinal_encode(df, column_names = []):
     encoded_data = np.array([])
     mappings = \
         {
-            'difficulty': {'easy':0, 'normal': 1,'unset':1,'hard': 2},
-            'learning_stage': {'elementary': 0,'junior': 1,'senior': 2}
+            'difficulty': {'easy': 0, 'normal': 1, 'unset': 1, 'hard': 2},
+            'learning_stage': {'elementary': 0, 'junior': 1, 'senior': 2}
         }
     for column in column_names:
         try:
             mapping = mappings[column]
         except:
-            print("Please add ordinal mapping to ordinal_dict in 'ordinal_encode'-function in data/data_preprocessing.py")
-        temp = list(map(lambda x: mapping[x],df[column]))
+            print(
+                "Please add ordinal mapping to ordinal_dict in 'ordinal_encode'-function in data/data_preprocessing.py")
+        temp = list(map(lambda x: mapping[x], df[column]))
         if encoded_data.shape[0] == 0:
             encoded_data = np.array(temp)
         else:
@@ -90,7 +89,8 @@ def ordinal_encode(df, column_names = []):
     df_encoded = pd.DataFrame(encoded_data.T, columns=column_names)
     return df_encoded, column_names
 
-def one_hot_encode(df,column_names=['gender','is_self_coach']):
+
+def one_hot_encode(df, column_names=['gender', 'is_self_coach']):
     """
     one-hot-encode categorical features
     :param df: dataframe with only the columns to be one-hot-encoded
@@ -105,6 +105,7 @@ def one_hot_encode(df,column_names=['gender','is_self_coach']):
     encoded_data = enc.transform(df).toarray()
     df_encoded = pd.DataFrame(encoded_data, columns=column_names)
     return df_encoded, column_names, enc
+
 
 def extract_additional_user_features(df_u):
     """
@@ -121,11 +122,14 @@ def extract_additional_user_features(df_u):
     for u in users:
         pass
 
+
 def extract_additional_problem_features(df_ex):
     """
     :param df_ex:
     :return:
     """
+
+
 def preprocess_df(df, o_features):
     """
 
@@ -133,34 +137,36 @@ def preprocess_df(df, o_features):
     :param o_features: object features as described in data/feature_categorization.py
     :return:
     """
-    f,f_time,f_OR,f_OH,f_meta = o_features.features, o_features.features_to_be_time_encoded,o_features.features_to_be_OR_encoded,o_features.features_to_be_OH_encoded,o_features.features_meta
-    df_f, df_time, df_OR,df_OH,df_meta = df[f], df[f_time], df[f_OR],df[f_OH],df[f_meta]
+    f, f_time, f_OR, f_OH, f_meta = o_features.features, o_features.features_to_be_time_encoded, o_features.features_to_be_OR_encoded, o_features.features_to_be_OH_encoded, o_features.features_meta
+    df_f, df_time, df_OR, df_OH, df_meta = df[f], df[f_time], df[f_OR], df[f_OH], df[f_meta]
 
-    if f_time: #if not empty then unix encode
-        df_time = unix_encode(df_time,f_time) # Takes a significant amount of time to compute (for subset it is approx 20 seconds)
+    if f_time:  # if not empty then unix encode
+        df_time = unix_encode(df_time,
+                              f_time)  # Takes a significant amount of time to compute (for subset it is approx 20 seconds)
 
     if f_OR:
         df_OR, column_names_OR = ordinal_encode(df_OR, f_OR)
 
     if f_OH:
-        for column in  df_OH.columns:
+        for column in df_OH.columns:
             if df_OH[column].hasnans:
                 df_OH[column] = df_OH[column].astype('string').fillna("unspecified")
 
-        df_OH,column_names_OH, enc_OH = one_hot_encode(df_OH, f_OH)
-    dfs = [df_f,df_time,df_OR,df_OH,df_meta]
+        df_OH, column_names_OH, enc_OH = one_hot_encode(df_OH, f_OH)
+    dfs = [df_f, df_time, df_OR, df_OH, df_meta]
     df_counter = 0
     for df_ in dfs:
         if df_.shape[1] != 0:
-            df_counter +=1
-            if df_counter ==1:
+            df_counter += 1
+            if df_counter == 1:
                 df_final = df_
             else:
                 df_final = pd.concat([df_final, df_], axis=1)
     return df_final
 
-def remove_outliers_by_quantile(df,columns, quantiles):
-    for column,quantile_ in zip(columns,quantiles):
+
+def remove_outliers_by_quantile(df, columns, quantiles):
+    for column, quantile_ in zip(columns, quantiles):
         index_names = df[(df[column] > df[column].quantile(quantile_))].index
         df.drop(index_names, inplace=True)
     return df

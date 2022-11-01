@@ -1,9 +1,8 @@
-
 class User():
     def __init__(self, u):
         self.uuid = u['uuid']
         self.gender = u['gender']
-        self.points = u['points'] #Enery points028
+        self.points = u['points']  # Enery points028
         self.badges_cnt = u['badges_cnt']
         self.first_login = u['first_login_date_TW']
         self.user_grade = u['user_grade']
@@ -13,6 +12,7 @@ class User():
         self.has_student_cnt = u['has_student_cnt']
         self.belongs_to_class_cnt = u['belongs_to_class_cnt']
         self.has_class_cnt = u['has_class_cnt']
+
 
 class Problem():
     def __init__(self, pr):
@@ -30,6 +30,8 @@ class Problem():
         self.is_downgrade = pr['is_downgrade']
         self.is_upgrade = pr['is_upgrade']
         self.level = pr['level']
+
+
 class Content():
     def __init__(self, ex):
         self.ucid = ex['ucid']
