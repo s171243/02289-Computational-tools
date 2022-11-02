@@ -11,16 +11,23 @@ class MRWordFrequencyCount(MRJob):
 
     def mapper(self, _, line):
         data_row = line.split(",")
-        if data_row[7].isdigit():
-            yield data_row[1], (int(data_row[7]))
+        is_correct = data_row[6] == "True"
+        if data_row[7].isdigit() and data_row[13].isdigit():
+            yield data_row[1], (int(data_row[7]), int(data_row[13]), is_correct, data_row[3])
 
     def reducer(self, key, values):
         countt = 0
         val = []
-        for v in values:
+        levels = []
+        correct = []
+        problems = set()
+        for v, level, is_correct, upid in values:
             countt += 1
             val.append(v)
-        yield (key, sum(val) / countt)
+            levels.append(level)
+            correct.append(is_correct)
+            problems.add(upid)
+        yield key, (sum(val) / countt, sum(levels) / countt, sum(correct) / countt, countt, len(problems), max(levels))
 
 
 if __name__ == '__main__':
