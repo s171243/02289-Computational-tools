@@ -1,7 +1,6 @@
+import numpy as np
+import pandas as pd
 from sklearn.preprocessing import OneHotEncoder, StandardScaler, MinMaxScaler, MaxAbsScaler
-import pandas as pd, numpy as np
-from tqdm import tqdm
-from data.feature_categorization import U_features, Ex_features, Pr_features
 
 
 ####Preproccesing steps
@@ -127,15 +126,26 @@ def extract_additional_user_features(df_u, df_problems, df_content):
     encoded_df, cols = ordinal_encode(problem_content[["difficulty", "learning_stage"]],
                                       column_names=["difficulty", "learning_stage"])
     problem_content[cols] = encoded_df[cols]
-    problem_content_grouped = problem_content.groupby("uuid").agg(
-        {"is_correct": "mean", "total_sec_taken": "mean", "upid": "count", "level": ["mean", "max"],
-         "used_hint_cnt": "mean", "difficulty": "mean", "learning_stage": "mean"})
-    problem_content_grouped.columns = ["correct_percentage", "time_spent", "problems_attempted", "average_level",
-                                       "max_level",
-                                       "average_hints", "avg_difficulty", "avg_learning_stage"]
+    problem_content_grouped = problem_content.groupby("uuid").agg({
+        "is_correct": "mean",
+        "total_sec_taken": "mean",
+        "upid": "count",
+        "level": ["mean", "max"],
+        "used_hint_cnt": "mean",
+        "difficulty": "mean",
+        "learning_stage": "mean",
+    })
+    problem_content_grouped.columns = [
+        "correct_percentage",
+        "time_spent",
+        "problems_attempted",
+        "average_level", "max_level",
+        "average_hints",
+        "avg_difficulty",
+        "avg_learning_stage",
+    ]
     remove_outliers_by_quantile(problem_content_grouped,
-                                columns=["correct_percentage", "time_spent", "problems_attempted", "average_level",
-                                         "max_level", "average_hints", "avg_difficulty", "avg_learning_stage"],
+                                columns=problem_content_grouped.columns,
                                 quantiles=[0.82, 0.82, 0.82, 0.82])
 
     users = df_u.merge(problem_content_grouped, left_on="uuid", right_on="uuid")
