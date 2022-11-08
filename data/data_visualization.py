@@ -12,6 +12,9 @@ def plot_columns_of_df(df):
         plt.legend([(key, round(val, 2)) for key, val in df[column].describe().iteritems()])
         plt.show()
 
-
+def hist_plot(data,title):
+    plt.hist(data)
+    plt.title(title)
+    plt.show()
 if __name__ == "__main__":
     pass
