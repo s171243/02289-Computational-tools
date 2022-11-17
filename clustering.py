@@ -1,4 +1,5 @@
 import pandas as pd
+import os
 from sklearn.cluster import KMeans
 from sklearn.decomposition import PCA
 import matplotlib.pyplot as plt
@@ -75,6 +76,7 @@ def cluster_main():
     X = preprocess_df(df=X, o_features=user_features)
     write_clusters(X)
     X = X.drop(['uuid'], axis=1)
+    os.system("python MapReduceSandbox.py data/csv_files/Log_Problem_subset.csv > data/csv_files/reduced.csv")
 
     user_clustering_kmeans(X)
     visualize_with_PCA(X)
@@ -92,7 +94,7 @@ def write_clusters(X):
         X['cluster'] = pd.Series(y, index=X.index)
 
         users = X[["uuid", "cluster"]]
-        users.to_csv("data/csv_files/clusters")
+        users.to_csv("data/csv_files/clusters.csv")
 
 
 #

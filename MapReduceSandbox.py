@@ -1,9 +1,10 @@
 import numpy as np
 from mrjob.job import MRJob
 from mrjob.step import MRStep
+from mr3px.csvprotocol import CsvProtocol
 
 class MRWordFrequencyCount(MRJob):
-
+    OUTPUT_PROTOCOL = CsvProtocol
     def steps(self):
         return [
             MRStep(mapper=self.mapper, reducer=self.reducer)
@@ -27,7 +28,7 @@ class MRWordFrequencyCount(MRJob):
             levels.append(level)
             correct.append(is_correct)
             problems.add(upid)
-        yield key, (sum(val) / countt, sum(levels) / countt, sum(correct) / countt, countt, len(problems), max(levels))
+        yield key, (key, countt, sum(val), sum(levels), sum(correct), len(problems), max(levels))
 
 
 if __name__ == '__main__':
