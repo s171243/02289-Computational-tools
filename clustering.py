@@ -20,6 +20,7 @@ def user_clustering_kmeans(X):
         # kmeans.labels_
         # kmeans.cluster_centers_
         inertias.append(kmeans.inertia_)
+
     plt.plot(list(range(1, max_clusters)), inertias)
     plt.title("intertia of kmeans")
     plt.xlabel("n_clusters")
@@ -37,6 +38,7 @@ def visualize_with_PCA(X, optimal_clusters=10):
     """
     kmeans = KMeans(n_clusters=optimal_clusters, random_state=0, max_iter=500).fit(X)
     y = kmeans.predict(X)
+
 
     fig = plt.figure(1, figsize=(8, 6))
     ax = fig.add_subplot(111, projection="3d", elev=15, azim=200)  # azim=110
@@ -71,9 +73,26 @@ def cluster_main():
     X = extract_additional_user_features(df_u, df_pr, df_c)
     user_features = U_features()
     X = preprocess_df(df=X, o_features=user_features)
+    write_clusters(X)
     X = X.drop(['uuid'], axis=1)
+
     user_clustering_kmeans(X)
     visualize_with_PCA(X)
+
+
+def write_clusters(X):
+    X_no_uuid = X.drop(['uuid'], axis=1)
+
+    kmeans = KMeans(n_clusters=5, random_state=0, max_iter=500).fit(X_no_uuid)
+    y = kmeans.predict(X_no_uuid)
+
+    write = True
+    if write:
+        print(X.columns)
+        X['cluster'] = pd.Series(y, index=X.index)
+
+        users = X[["uuid", "cluster"]]
+        users.to_csv("data/csv_files/clusters")
 
 
 #
