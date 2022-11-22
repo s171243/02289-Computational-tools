@@ -44,7 +44,7 @@ def construct_util_matrix(users,problems):
                 is_correct = user_problems.loc[[j],'is_correct'].values[0]
                 user_difficulties.append(get_difficulty(time,max_time,is_correct))
                 M[i,problem_index] = user_difficulties[-1]
-            #TODO use user_prob_idx to find difficulties, calculate mean and std to normalize.
+            #standardize difficulty values between [-1,1]
             m = np.mean(user_difficulties)
             std = np.std(user_difficulties)
             M[i,user_prob_idx] = (M[i,user_prob_idx] - m) / std
