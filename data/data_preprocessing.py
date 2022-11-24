@@ -1,7 +1,10 @@
+import os
+
 import numpy as np
 import pandas as pd
 from sklearn.preprocessing import OneHotEncoder, StandardScaler, MinMaxScaler, MaxAbsScaler
-
+import warnings
+warnings.filterwarnings("ignore")
 
 ####Preproccesing steps
 # 0. Load data
@@ -33,7 +36,8 @@ def scale(df, scaler="standard"):
 def unix_encode(df, column_names=[]):
     """
     Encode date to unix format (sec/min/hour since unix epoch), that can be used for clustering/prediction
-    A kind of ugly implementation trying to speed up to_datetime by providing the relevant time formats (There is a 10-100x speed up to give correct format)
+    A kind of ugly implementation trying to speed up to_datetime by providing the relevant time formats
+    (There is a 10-100x speed up to give correct format)
     :param df:
     :param column_names:
     :return:
@@ -98,7 +102,7 @@ def one_hot_encode(df, column_names=['gender', 'is_self_coach']):
     """
     enc = OneHotEncoder()
     enc.fit(df)
-    print(enc.categories_)
+    # print(enc.categories_)
     column_names = enc.get_feature_names(column_names)
 
     encoded_data = enc.transform(df).toarray()
@@ -118,9 +122,13 @@ def extract_additional_user_features(df_u, df_problems, df_content):
     """
 
     # Get features based on content
-    remove_outliers_by_quantile(df_problems,
+    """remove_outliers_by_quantile(df_problems,
                                 columns=['problem_number', 'exercise_problem_repeat_session', 'total_sec_taken',
                                          'total_attempt_cnt'], quantiles=[0.82, 0.82, 0.82, 0.82])
+"""
+    # os.system("python MapReduceSandbox.py data/csv_files/Log_Problem_subset.csv > data/csv_files/reduced.csv")
+    reduced = pd.read_csv("data/csv_files/reduced.csv",
+                          names=["uuid", "problems_attempted", "total_sec_taken", "average_level", "correct_percentage", "max_level"])
 
     problem_content = df_problems.merge(df_content)
     encoded_df, cols = ordinal_encode(problem_content[["difficulty", "learning_stage"]],
@@ -144,9 +152,9 @@ def extract_additional_user_features(df_u, df_problems, df_content):
         "avg_difficulty",
         "avg_learning_stage",
     ]
-    remove_outliers_by_quantile(problem_content_grouped,
+    """remove_outliers_by_quantile(problem_content_grouped,
                                 columns=problem_content_grouped.columns,
-                                quantiles=[0.82, 0.82, 0.82, 0.82])
+                                quantiles=[0.82, 0.82, 0.82, 0.82])"""
 
     users = df_u.merge(problem_content_grouped, left_on="uuid", right_on="uuid")
 
