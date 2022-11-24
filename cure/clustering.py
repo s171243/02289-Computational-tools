@@ -16,6 +16,9 @@ class ClusterPartition:
             sum += point
         return sum / len(self.points)
 
+    def __len__(self):
+        return len(self.points)
+
 
 class Clustering:
     def __init__(self, dataset: np.ndarray, labels: np.ndarray):
