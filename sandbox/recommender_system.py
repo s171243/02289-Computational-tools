@@ -28,7 +28,8 @@ def get_clusters():
     return clusters
 
 def construct_util_matrix(users,problems):
-    M = np.empty((len(users),len(problems['upid'].unique())))
+    unique_problems = problems['upid'].unique()
+    M = np.empty((len(users),len(unique_problems)))
     for i, userID in enumerate(tqdm(users['uuid'],desc="Func: construct_util_matrix()")):
         user_problems = problems.loc[problems['uuid'] == userID]
         if not user_problems.empty:
@@ -38,25 +39,21 @@ def construct_util_matrix(users,problems):
             user_difficulties = []
             for j in user_problems.index.to_list():
                 problem_ID = user_problems.loc[[j],'upid'].values[0]
-                problem_index = np.where(problems['upid'].unique() == problem_ID)[0][0]
+                problem_index = np.where(unique_problems == problem_ID)[0][0]
                 user_prob_idx.append(problem_index)
                 time = user_problems.loc[[j],'total_sec_taken'].values[0]
                 is_correct = user_problems.loc[[j],'is_correct'].values[0]
                 user_difficulties.append(get_difficulty(time,max_time,is_correct))
                 M[i,problem_index] = user_difficulties[-1]
-            #standardize difficulty values between [-1,1]
-            m = np.mean(user_difficulties)
-            std = np.std(user_difficulties)
-            M[i,user_prob_idx] = (M[i,user_prob_idx] - m) / std
+            #standardize difficulty values between [0,1]
+            min_ = np.min(user_difficulties)
+            max_ = np.max(user_difficulties)
+            M[i,user_prob_idx] = (M[i,user_prob_idx] - min_) / (max_)
 
         else:
             #M = np.delete(M, i, axis=0)
             pass
-
-
-    a = 2
-    a *= 2
-    return M
+    return M,unique_problems
 
 def get_difficulty(time,max_time,is_correct,alpha=0.8):
     """
@@ -92,14 +89,35 @@ def generate_utility_matrix_for_one_cluster(clusters,cluster_id,df_u_full,df_pr_
     sub_users = df_u_full['uuid'].isin(cluster['uuid'].to_list())
     df_u_sub = df_u_full.loc[sub_users]
     problems = []
+
+    sub_problems1 = df_pr_full[df_pr_full['uuid'].isin(df_u_sub['uuid'])]['upid'].unique()
     for userID in tqdm(cluster['uuid'],desc="Func: generate_utility_matrix_for_one_cluster()"):
         user_info = df_pr_full.loc[df_pr_full['uuid'] == userID]
         for problem in user_info['upid']:
             problems.append(problem)
     sub_problems = df_pr_full['upid'].isin(problems)
     df_pr_sub = df_pr_full.loc[sub_problems]
-    M = construct_util_matrix(df_u_sub, df_pr_sub)
-    pass
+    M, unique_prob_ids = construct_util_matrix(df_u_sub, df_pr_sub)
+    return M, df_u_sub['uuid'], unique_prob_ids
+
+
+def get_recommendations(M):
+    # Now that we have a utility matrix, we need to fill all empty entries
+    recommendations = np.zeros_like(M)  # Create copy of utility matrix, so that 'predictions' are not used when aggregating
+    for user in tqdm(range(np.shape(M)[0]),desc="get_recommendations()"):
+        recommendations[user, :] = get_recommendation_for_single_user(user, M)
+    return recommendations
+def get_recommendation_for_single_user(user_idx, M):
+    # Now that we have a utility matrix, we need to fill all empty entries
+    #M2 = np.copy(M)  # Create copy of utility matrix, so that 'predictions' are not used when aggregating
+    n_user = np.shape(M)[0]
+    n_problems = np.shape(M)[1]
+    user_recommendations = np.zeros(n_problems)
+    unsolved_problems = np.argwhere(M[user_idx, :] == 0)
+    relevant_user_ids = list(range(0,user_idx))+list(range(user_idx+1,n_user))
+    relevant_M = M[relevant_user_ids, unsolved_problems]
+    user_recommendations[unsolved_problems] = np.reshape(np.sum(relevant_M, axis=1) / np.sum(relevant_M != 0, axis=1),(-1,1))
+    return user_recommendations
 
 
 if __name__ == "__main__":
@@ -121,22 +139,18 @@ if __name__ == "__main__":
     #TODO Generate utility matrix for each cluster - and save.
     i = 0
     cluster_id = 3
-    M1 = generate_utility_matrix_for_one_cluster(clusters=clusters,df_u_full=df_u,df_pr_full=df_pr,cluster_id=cluster_id)
+    M, U1_ids, P1_ids = generate_utility_matrix_for_one_cluster(clusters=clusters, df_u_full=df_u, df_pr_full=df_pr, cluster_id=cluster_id)
 
     #U[i:(cluster.shape[0] + i), :] = M
     #i += cluster.shape[0]
+    user_idx = 1 #U1_ids.iloc[0]
+    difficulties_for_single_user = get_recommendation_for_single_user(user_idx, M)
 
+    difficulties_for_all_user = get_recommendations(M)
 
-    # Now that we have a utility matrix, we need to fill all empty entries
-    M2 = np.copy(M1)  # Create copy of utility matrix, so that 'predictions' are not used when aggregating
-    user_recommendations = np.zeros(np.shape(M1)[0])
-    for user in np.shape(M1)[0]:
-        unsolved_problems = np.argwhere(M1[user, :] == 0.0)
-        # for each unsolved problem we aggregate the difficulty for all similar users (users in same cluster)
-        for prob in unsolved_problems:
-            sim_users = np.argwhere(M1[:, prob] != 0.0)
-            aggregate = np.mean(M1[sim_users, prob])
-            M2[user, prob] = aggregate
+    a = 2
+    a *= 2
+    pass
 
     #TODO 1. Implement difficulty function DONE
     #TODO 2. construct utility matrix per user group using 1. then standardize across user DONE

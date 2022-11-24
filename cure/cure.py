@@ -3,8 +3,8 @@ from typing import Any, List, Union
 import matplotlib.pyplot as plt
 from sklearn.cluster import KMeans, DBSCAN
 
-from cluster_utils import *
-from clustering import Clustering, ClusterPartition
+from cure.cluster_utils import *
+from cure.clustering import Clustering, ClusterPartition
 
 
 def load_data(filename: str) -> np.ndarray:
@@ -151,7 +151,7 @@ def cure_clustering(data: np.ndarray) -> Clustering:
         partition.representatives = calc_representatives(partition, desired=9)
 
     # Debug opportunity
-    plot_clustering(init_clustering)
+    # plot_clustering(init_clustering)
 
     remainder_labels = cure_classify_remainders(init_clustering, remainder)
     return Clustering(

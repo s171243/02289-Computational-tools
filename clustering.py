@@ -1,16 +1,16 @@
 import numpy as np
+import matplotlib.pyplot as plt
 import pandas as pd
-import os
 from sklearn.cluster import KMeans
 from sklearn.decomposition import PCA
 from pyod.models.ecod import ECOD
 import matplotlib.pyplot as plt
 from sklearn.metrics import davies_bouldin_score
-
 from data.data_preprocessing import preprocess_df, extract_additional_user_features
+from cure.cure import cure_clustering
 from data.data_loader import load_data_raw
-from data.data_visualization import plot_columns_of_df
-from data.feature_categorization import U_features, Ex_features, Pr_features
+from data.data_preprocessing import preprocess_df, extract_additional_user_features
+from data.feature_categorization import U_features
 
 def david_bouldin(X, label=""):
     """
@@ -61,7 +61,21 @@ def inertia_graph_kmeans(X, label =""):
     plt.grid(True)
     plt.show()
 
-def scaled_inertia_graph_kmeans(X, label):
+
+def user_clustering_cure(X):
+    clustering = cure_clustering(X.values)
+    inertia = clustering.inertia
+
+
+def compare_cure_kmeans(X):
+    kmeans = KMeans(n_clusters=5, random_state=0, max_iter=500).fit(X)
+    inertia_kmeans = kmeans.inertia_
+    clustering = cure_clustering(X.values)
+    inertia_cure = clustering.inertia_
+    print(f"Kmeans inertia: {inertia_kmeans}, CURE inertia: {inertia_cure}")
+
+
+def scaled_inertia(X, label=""):
     """
     cluster users and plot the elbow-graph to visualize most appropriate number of classes based on intertia
     :param X: preprocessed data
@@ -79,7 +93,7 @@ def scaled_inertia_graph_kmeans(X, label):
         kmeans = KMeans(n_clusters=i, random_state=0, max_iter=500).fit(X)
         # kmeans.labels_
         # kmeans.cluster_centers_
-        inertias.append(kmeans.inertia_/initial_inertia+i*alpha)
+        inertias.append(kmeans.inertia_ / initial_inertia + i * alpha)
 
     plt.plot(list(range(1, max_clusters)), inertias)
     plt.title("Scaled inertia: " + label)
@@ -98,10 +112,8 @@ def visualize_with_PCA(X, optimal_clusters=3, label=""):
     """
     kmeans = KMeans(n_clusters=optimal_clusters, random_state=0, max_iter=500).fit(X)
     y = kmeans.predict(X)
-
     labels = kmeans.labels_
     print(f"BOULDIN: {davies_bouldin_score(X, labels)}")
-
     fig = plt.figure(1, figsize=(8, 6))
     ax = fig.add_subplot(111, projection="3d", elev=15, azim=200)  # azim=110
 
@@ -150,16 +162,14 @@ def cluster_main():
         for df, label in zip(dfs, labels):
             write_clusters(df, label=label)
             df = df.drop(['uuid'], axis=1)
-
             # plot_columns_of_df(X)
             # david_bouldin(df, label=label)
             inertia_graph_kmeans(df, label=label)
-            scaled_inertia_graph_kmeans(df, label=label)
+            scaled_inertia(df, label=label)
             visualize_with_PCA(df, label=label)
     else:
+
         df = X
-
-
         label = "all"
         # write_clusters(df, label)
         df = df.drop(['uuid'], axis=1)
@@ -173,7 +183,7 @@ def cluster_main():
         # plot_columns_of_df(X)
         david_bouldin(df, label=label)
         inertia_graph_kmeans(df, label=label)
-        scaled_inertia_graph_kmeans(df, label=label)
+        scaled_inertia(df, label=label)
         visualize_with_PCA(df, label=label)
 
 
