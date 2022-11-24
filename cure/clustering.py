@@ -1,7 +1,7 @@
 from functools import cached_property
 from typing import List
 
-from cluster_utils import *
+from cure.cluster_utils import *
 
 
 class ClusterPartition:
@@ -33,6 +33,15 @@ class Clustering:
     def partitions(self) -> List[ClusterPartition]:
         parts = map(lambda p: ClusterPartition(p), self._materialize_partitions())
         return list(parts)
+
+    @cached_property
+    def inertia_(self):
+        sum = 0.0
+        for partition in self.partitions:
+            for point in partition.points:
+                d = distance(point, partition.centroid)
+                sum += d * d
+        return sum
 
     def _materialize_partitions(self):
         for k in range(self.partition_num):
