@@ -4,6 +4,9 @@ import numpy as np
 import pandas as pd
 from sklearn.preprocessing import OneHotEncoder, StandardScaler, MinMaxScaler, MaxAbsScaler
 import warnings
+
+from data.data_visualization import plot_columns_of_df
+
 warnings.filterwarnings("ignore")
 
 ####Preproccesing steps
@@ -109,7 +112,6 @@ def one_hot_encode(df, column_names=['gender', 'is_self_coach']):
     df_encoded = pd.DataFrame(encoded_data, columns=column_names)
     return df_encoded, column_names, enc
 
-
 def extract_additional_user_features(df_u, df_problems, df_content):
     """
     not finished.
@@ -122,14 +124,6 @@ def extract_additional_user_features(df_u, df_problems, df_content):
     """
 
     # Get features based on content
-    """remove_outliers_by_quantile(df_problems,
-                                columns=['problem_number', 'exercise_problem_repeat_session', 'total_sec_taken',
-                                         'total_attempt_cnt'], quantiles=[0.82, 0.82, 0.82, 0.82])
-"""
-    # os.system("python MapReduceSandbox.py data/csv_files/Log_Problem_subset.csv > data/csv_files/reduced.csv")
-    reduced = pd.read_csv("data/csv_files/reduced.csv",
-                          names=["uuid", "problems_attempted", "total_sec_taken", "average_level", "correct_percentage", "max_level"])
-
     problem_content = df_problems.merge(df_content)
     encoded_df, cols = ordinal_encode(problem_content[["difficulty", "learning_stage"]],
                                       column_names=["difficulty", "learning_stage"])
@@ -143,7 +137,7 @@ def extract_additional_user_features(df_u, df_problems, df_content):
         "difficulty": "mean",
         "learning_stage": "mean",
     })
-    problem_content_grouped.columns = [
+    cols = [
         "correct_percentage",
         "time_spent",
         "problems_attempted",
@@ -152,11 +146,30 @@ def extract_additional_user_features(df_u, df_problems, df_content):
         "avg_difficulty",
         "avg_learning_stage",
     ]
-    """remove_outliers_by_quantile(problem_content_grouped,
-                                columns=problem_content_grouped.columns,
-                                quantiles=[0.82, 0.82, 0.82, 0.82])"""
+    problem_content_grouped.columns = cols
 
     users = df_u.merge(problem_content_grouped, left_on="uuid", right_on="uuid")
+
+    return users
+
+
+def _extract_additional_user_features(df_u, df_problems, df_content):
+    """
+    not finished.
+    intendend purpose: extract user features from problems. Potentially using map_reduce
+    # exercise_per_level
+    # avg_time_spend
+    # avg_correct
+    # problem_solved
+    :return:
+    """
+
+    # os.system("python MapReduceSandbox.py data/csv_files/Log_Problem_subset.csv > data/csv_files/reduced.csv")
+    reduced = pd.read_csv("data/csv_files/reduced.csv",
+                          names=["uuid", "problems_attempted", "total_sec_taken", "average_level", "correct_percentage", "max_level", "difficulty", "learning_stage"])
+
+
+    users = df_u.merge(reduced, left_on="uuid", right_on="uuid")
 
     return users
 
@@ -175,12 +188,16 @@ def preprocess_df(df, o_features):
     :param o_features: object features as described in data/feature_categorization.py
     :return:
     """
-    f, f_time, f_OR, f_OH, f_meta = o_features.features, o_features.features_to_be_time_encoded, o_features.features_to_be_OR_encoded, o_features.features_to_be_OH_encoded, o_features.features_meta
-    df_f, df_time, df_OR, df_OH, df_meta = df[f], df[f_time], df[f_OR], df[f_OH], df[f_meta]
+    f, f_time, f_OR, f_OH, f_meta, f_scale = o_features.features, o_features.features_to_be_time_encoded, o_features.features_to_be_OR_encoded, o_features.features_to_be_OH_encoded, o_features.features_meta, o_features.features_to_be_scaled
+    df_f, df_time, df_OR, df_OH, df_meta, df_scale = df[f], df[f_time], df[f_OR], df[f_OH], df[f_meta], df[f_scale]
 
     if f_time:  # if not empty then unix encode
         df_time = unix_encode(df_time,
                               f_time)  # Takes a significant amount of time to compute (for subset it is approx 20 seconds)
+
+    if f_scale:
+        df_scale = scale(df_scale)
+        plot_columns_of_df(df_scale)
 
     if f_OR:
         df_OR, column_names_OR = ordinal_encode(df_OR, f_OR)
@@ -191,7 +208,7 @@ def preprocess_df(df, o_features):
                 df_OH[column] = df_OH[column].astype('string').fillna("unspecified")
 
         df_OH, column_names_OH, enc_OH = one_hot_encode(df_OH, f_OH)
-    dfs = [df_f, df_time, df_OR, df_OH, df_meta]
+    dfs = [df_f, df_time, df_OR, df_OH, df_meta, df_scale]
     df_counter = 0
     for df_ in dfs:
         if df_.shape[1] != 0:

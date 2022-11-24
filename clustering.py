@@ -5,6 +5,7 @@ from sklearn.decomposition import PCA
 import matplotlib.pyplot as plt
 from data.data_preprocessing import preprocess_df, extract_additional_user_features
 from data.data_loader import load_data_raw
+from data.data_visualization import plot_columns_of_df
 from data.feature_categorization import U_features, Ex_features, Pr_features
 
 
@@ -16,6 +17,8 @@ def user_clustering_kmeans(X):
     """
     inertias = []
     max_clusters = 25
+
+    # scaled inertia
     for i in range(1, max_clusters):
         kmeans = KMeans(n_clusters=i, random_state=0, max_iter=500).fit(X)
         # kmeans.labels_
@@ -24,13 +27,41 @@ def user_clustering_kmeans(X):
 
     plt.plot(list(range(1, max_clusters)), inertias)
     plt.title("intertia of kmeans")
+    plt.xticks(list(range(0, max_clusters)))
     plt.xlabel("n_clusters")
     plt.ylabel("Inertia")
     plt.grid(True)
     plt.show()
 
+def scaled_inertia(X):
+    """
+    cluster users and plot the elbow-graph to visualize most appropriate number of classes based on intertia
+    :param X: preprocessed data
+    :return:
+    """
+    inertias = []
+    max_clusters = 25
 
-def visualize_with_PCA(X, optimal_clusters=10):
+    # scaled inertia
+
+    kmeans_initial = KMeans(n_clusters=1, random_state=0, max_iter=500).fit(X)
+    initial_inertia = kmeans_initial.inertia_
+    alpha = 0.02
+    for i in range(1, max_clusters):
+        kmeans = KMeans(n_clusters=i, random_state=0, max_iter=500).fit(X)
+        # kmeans.labels_
+        # kmeans.cluster_centers_
+        inertias.append(kmeans.inertia_/initial_inertia+i*alpha)
+
+    plt.plot(list(range(1, max_clusters)), inertias)
+    plt.title("Scaled inertia")
+    plt.xlabel("n_clusters")
+    plt.xticks(list(range(0, max_clusters)))
+    plt.ylabel("Inertia")
+    plt.grid(True)
+    plt.show()
+
+def visualize_with_PCA(X, optimal_clusters=3):
     """
     Visualize clusters with PCA, given the optimal amount of clusters found using the graph produced by the function user_clustering_kmeans()
     :param X:
@@ -76,16 +107,17 @@ def cluster_main():
     X = preprocess_df(df=X, o_features=user_features)
     write_clusters(X)
     X = X.drop(['uuid'], axis=1)
-    os.system("python MapReduceSandbox.py data/csv_files/Log_Problem_subset.csv > data/csv_files/reduced.csv")
 
+    # plot_columns_of_df(X)
     user_clustering_kmeans(X)
+    scaled_inertia(X)
     visualize_with_PCA(X)
 
 
 def write_clusters(X):
     X_no_uuid = X.drop(['uuid'], axis=1)
 
-    kmeans = KMeans(n_clusters=5, random_state=0, max_iter=500).fit(X_no_uuid)
+    kmeans = KMeans(n_clusters=6, random_state=0, max_iter=500).fit(X_no_uuid)
     y = kmeans.predict(X_no_uuid)
 
     write = True

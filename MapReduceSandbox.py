@@ -46,7 +46,7 @@ class MRWordFrequencyCount(MRJob):
         if data_row[7].isdigit() and data_row[13].isdigit():
             learning_stage = self.with_numpy(self.content, "learning_stage", "ucid", ucid)
             difficulty = self.with_numpy(self.content, "difficulty", "ucid", ucid)
-            yield data_row[1], (int(data_row[7]), int(data_row[13]), is_correct, data_row[3],
+            yield uuid, (int(data_row[7]), int(data_row[13]), is_correct, data_row[3],
                                 learning_stage, difficulty)
 
     def reducer(self, key, values):
