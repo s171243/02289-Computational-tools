@@ -3,7 +3,7 @@ from sklearn.cluster import KMeans, DBSCAN
 from sklearn.metrics.pairwise import pairwise_distances
 
 """ Sample size for initial clustering """
-CURE_SAMPLE = lambda size: int(size / 10 - 1)
+CURE_SAMPLE = lambda size: int(size / 500)
 
 """ Number of (calculated, random) representative points """
 CURE_REPRES = lambda sample_len: (10, 5)  # (calculated, random)
@@ -45,7 +45,7 @@ def _cure_initial_clustering(sample: np.ndarray):
         return arbitrary_choice
 
     # intentionally not using AgglomerativeClustering
-    eps = eps_calculation()
+    eps = 0.5 * eps_calculation()
     labels = DBSCAN(eps=eps, min_samples=10).fit(sample)
     return labels.labels_
 

@@ -1,18 +1,16 @@
 import json
 
-import numpy as np
 import matplotlib.pyplot as plt
-import numpy as np
 import pandas as pd
-from sklearn.cluster import KMeans
+from pyod.models.ecod import ECOD
 from sklearn.decomposition import PCA
-import matplotlib.pyplot as plt
 from sklearn.metrics import davies_bouldin_score
-from data.data_preprocessing import preprocess_df, extract_additional_user_features
-from cure.cure import cure_clustering
+
+from cure import *
 from data.data_loader import load_data_raw
 from data.data_preprocessing import preprocess_df, extract_additional_user_features
 from data.feature_categorization import U_features
+
 
 def david_bouldin(X, label=""):
     """
@@ -38,7 +36,8 @@ def david_bouldin(X, label=""):
     plt.grid(True)
     plt.show()
 
-def inertia_graph_kmeans(X, label =""):
+
+def inertia_graph_kmeans(X, label=""):
     """
     cluster users and plot the elbow-graph to visualize most appropriate number of classes based on intertia
     :param X: preprocessed data
@@ -54,7 +53,6 @@ def inertia_graph_kmeans(X, label =""):
         # kmeans.cluster_centers_
         inertias.append(kmeans.inertia_)
 
-
     plt.plot(list(range(1, max_clusters)), inertias)
     plt.title("intertia of kmeans: " + label)
     plt.xticks(list(range(0, max_clusters)))
@@ -62,19 +60,6 @@ def inertia_graph_kmeans(X, label =""):
     plt.ylabel("Inertia")
     plt.grid(True)
     plt.show()
-
-
-def user_clustering_cure(X):
-    clustering = cure_clustering(X.values)
-    inertia = clustering.inertia
-
-
-def compare_cure_kmeans(X):
-    kmeans = KMeans(n_clusters=5, random_state=0, max_iter=500).fit(X)
-    inertia_kmeans = kmeans.inertia_
-    clustering = cure_clustering(X.values)
-    inertia_cure = clustering.inertia_
-    print(f"Kmeans inertia: {inertia_kmeans}, CURE inertia: {inertia_cure}")
 
 
 def scaled_inertia(X, label=""):
@@ -104,6 +89,7 @@ def scaled_inertia(X, label=""):
     plt.ylabel("Inertia")
     plt.grid(True)
     plt.show()
+
 
 def visualize_with_PCA(X, optimal_clusters=3, label=""):
     """
@@ -143,11 +129,13 @@ def visualize_with_PCA(X, optimal_clusters=3, label=""):
     ax.w_zaxis.set_ticklabels([])
     plt.show()
 
+
 def split_users(df):
     young = df[df["user_grade"] < 4]
     medium = df[(df["user_grade"] >= 4) & (df["user_grade"] < 8)]
     old = df[df["user_grade"] >= 8]
     return [young, medium, old], ["young", "middle", "old"]
+
 
 def cluster_main():
     df_u, df_pr, df_c = load_data_raw(subset=False)
@@ -175,6 +163,11 @@ def cluster_main():
         label = "all"
         # write_clusters(df, label)
         df = df.drop(['uuid'], axis=1)
+
+        cure_data = df.to_numpy()
+        cure_repres = cure_representatives(cure_data)
+        cure_labels = cure_classify(cure_data, cure_repres)
+
         clf = ECOD()
         clf.fit(df)
 
