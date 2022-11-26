@@ -1,9 +1,11 @@
+import json
+
 import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
 import pandas as pd
 from sklearn.cluster import KMeans
 from sklearn.decomposition import PCA
-from pyod.models.ecod import ECOD
 import matplotlib.pyplot as plt
 from sklearn.metrics import davies_bouldin_score
 from data.data_preprocessing import preprocess_df, extract_additional_user_features
@@ -200,6 +202,53 @@ def write_clusters(X, label=""):
 
         users = X[["uuid", "cluster"]]
         users.to_csv(f"data/csv_files/clusters_{label}.csv")
+
+
+def write_cluster_cure(X):
+    X_no_uuid = X.drop(['uuid'], axis=1)
+    clustering = cure_clustering(X_no_uuid.values)
+
+    write = True
+    if write:
+        y = clustering.labels
+        # print(X.columns)
+        X['cluster'] = pd.Series(y, index=X.index)
+
+        users = X[["uuid", "cluster"]]
+        users.to_csv("data/csv_files/clusters.csv")
+
+
+def write_user_cluster_cure(X):
+    write = True
+    if not write:
+        return
+
+    X_no_uuid = X.drop(['uuid'], axis=1)
+    clustering = cure_clustering(X_no_uuid.values)
+    labelset = clustering.labels
+
+    def partitions():
+        for k in range(clustering.partition_num):
+            mask = labelset == k
+            yield X.values[mask], mask
+
+    def similarities():
+        for partition in partitions():
+            values, mask = partition
+            n = values.shape[0]
+            matrix = np.zeros((n, n))
+            for i, p in enumerate(values):
+                for j, q in enumerate(values):
+                    matrix[i, j] = distance(p, q)
+            ids = X[mask]['uuid'].values
+            yield ids, matrix
+
+    out = list(similarities())
+
+    with open("data/csv_files/clusters_cure.json", "w") as outfile:
+        outfile.write(
+            json.dumps(out)
+        )
 
 
 #
