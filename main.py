@@ -1,6 +1,6 @@
 import time
 
-from sklearn.metrics import davies_bouldin_score
+import pandas as pd
 
 from clustering import split_users
 from cure import *
@@ -27,8 +27,7 @@ def main():
 
     log("Preprocessing...")
     user_features = U_features()
-    X = preprocess_df(df=X, o_features=user_features)
-
+    X: pd.DataFrame = preprocess_df(df=X, o_features=user_features)
 
     SPLIT_USERS = True
     if SPLIT_USERS:
@@ -45,10 +44,8 @@ def main():
         get_clusters_and_similarity_matrix(X)
         pass
 
-
-
     pass
-    #TODO add segmentation
+    # TODO add segmentation
     # M, U1_ids, P1_ids = generate_utility_matrix_for_one_cluster(clusters=clusters, df_u_full=df_u, df_pr_full=df_pr, cluster_id=cluster_id)
     #
     # #U[i:(cluster.shape[0] + i), :] = M
@@ -62,18 +59,19 @@ def main():
     # recommendation_difficulty_for_all_users,recommendation_idx_all = get_recommendation(difficulties_for_all_users)
 
 
-def get_clusters_and_similarity_matrix(X):
+def get_clusters_and_similarity_matrix(df: pd.DataFrame):
     log("CURE Classification...")
-    data = X.drop(columns=["uuid"]).to_numpy()
+    data = df.drop(columns=["uuid"]).to_numpy()
     cure_repres = cure_representatives(data)
     labels = cure_classify(data, cure_repres)
     log("CURE Classification: done")
     n_clusters = labels.max() + 1
     partition = lambda k: data[labels == k]
     similarities = [pairwise_distances(partition(k)) for k in range(n_clusters)]
-    sim_users = [X["uuid"][labels == k] for k in range(n_clusters)]
+    sim_users = [df["uuid"][labels == k] for k in range(n_clusters)]
     log("Similarity matrices calculated")
     return
+
 
 if __name__ == '__main__':
     main()

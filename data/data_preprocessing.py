@@ -1,13 +1,13 @@
-import os
+import warnings
 
 import numpy as np
 import pandas as pd
 from sklearn.preprocessing import OneHotEncoder, StandardScaler, MinMaxScaler, MaxAbsScaler
-import warnings
 
 from data.data_visualization import plot_columns_of_df
 
 warnings.filterwarnings("ignore")
+
 
 ####Preproccesing steps
 # 0. Load data
@@ -112,6 +112,7 @@ def one_hot_encode(df, column_names=['gender', 'is_self_coach']):
     df_encoded = pd.DataFrame(encoded_data, columns=column_names)
     return df_encoded, column_names, enc
 
+
 def extract_additional_user_features(df_u, df_problems, df_content):
     """
     not finished.
@@ -166,8 +167,8 @@ def _extract_additional_user_features(df_u, df_problems, df_content):
 
     # os.system("python MapReduceSandbox.py data/csv_files/Log_Problem_subset.csv > data/csv_files/reduced.csv")
     reduced = pd.read_csv("data/csv_files/reduced.csv",
-                          names=["uuid", "problems_attempted", "total_sec_taken", "average_level", "correct_percentage", "max_level", "difficulty", "learning_stage"])
-
+                          names=["uuid", "problems_attempted", "total_sec_taken", "average_level", "correct_percentage",
+                                 "max_level", "difficulty", "learning_stage"])
 
     users = df_u.merge(reduced, left_on="uuid", right_on="uuid")
 
@@ -181,7 +182,7 @@ def extract_additional_problem_features(df_ex):
     """
 
 
-def preprocess_df(df, o_features):
+def preprocess_df(df, o_features) -> pd.DataFrame:
     """
 
     :param df:
