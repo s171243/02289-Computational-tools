@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 from tqdm import tqdm
 from sklearn.preprocessing import StandardScaler
-from clustering import user_clustering_kmeans, visualize_with_PCA
+#from clustering import user_clustering_kmeans, visualize_with_PCA
 from data.data_loader import load_data_raw
 from data.data_preprocessing import extract_additional_user_features, preprocess_df
 from data.feature_categorization import U_features
@@ -114,12 +114,14 @@ def get_psedu_problem_difficulties_for_single_user(user_idx, M):
     n_problems = np.shape(M)[1]
     user_recommendations = np.zeros(n_problems)
     unsolved_problems = np.argwhere(M[user_idx, :] == 0)
+    unsolved_problems = [u[0] for u in unsolved_problems]
     relevant_user_ids = list(range(0,user_idx))+list(range(user_idx+1,n_user))
-    relevant_M = M[relevant_user_ids, unsolved_problems]
-    user_recommendations[unsolved_problems] = np.reshape(np.sum(relevant_M, axis=1) / np.sum(relevant_M != 0, axis=1),(-1,1))
+    relevant_M = M[relevant_user_ids,:][:,unsolved_problems]
+    user_recommendations[unsolved_problems] = np.sum(relevant_M, axis=0) / np.sum(relevant_M != 0, axis=0)
+    user_recommendations[np.isnan(user_recommendations)] = 0
     return user_recommendations
 
-def get_recommendation(difficulty_matrix,quantile=0.80,recommendations_to_return = 2):
+def get_recommendation(difficulty_matrix,quantile=0.80,recommendations_to_return = 1):
     if len(difficulty_matrix.shape) == 1:
         difficulty_matrix = np.reshape(difficulty_matrix,(1,-1))
 
@@ -130,10 +132,8 @@ def get_recommendation(difficulty_matrix,quantile=0.80,recommendations_to_return
 
     #indices of problems being recommended (based on the initial ordering in difficulty_matrix)
     problem_indices = sorted_indices[:,quantile_idx:quantile_idx+recommendations_to_return]
-
     #test = difficulty_matrix[:,problem_indices]
     difficulties_of_recommendations = [difficulty_matrix[user_idx, prob_idx] for (user_idx, prob_idx) in enumerate(problem_indices)]
-    pass
     return difficulties_of_recommendations, problem_indices
 
 
