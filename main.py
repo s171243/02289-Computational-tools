@@ -20,7 +20,7 @@ def log(msg):
 
 def main():
     log("Loading data...")
-    df_u, df_pr, df_c = load_data_raw(subset=False)
+    df_u, df_pr, df_c = load_data_raw(subset=True)
 
     log("Feature extraction...")
     X = extract_additional_user_features(df_u, df_pr, df_c)

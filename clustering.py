@@ -164,10 +164,8 @@ def cluster_main():
         # write_clusters(df, label)
         df = df.drop(['uuid'], axis=1)
 
-        cure_data = df.to_numpy()
-        cure_repres = cure_representatives(cure_data)
-        cure_labels = cure_classify(cure_data, cure_repres)
-
+        write_cure_cluster(df, X)
+        return
         clf = ECOD()
         clf.fit(df)
 
@@ -197,51 +195,26 @@ def write_clusters(X, label=""):
         users.to_csv(f"data/csv_files/clusters_{label}.csv")
 
 
-def write_cluster_cure(X):
-    X_no_uuid = X.drop(['uuid'], axis=1)
-    clustering = cure_clustering(X_no_uuid.values)
+def write_cure_cluster(df, X):
+    data = df.to_numpy()
+    repres = cure_representatives(data)
+    labels = cure_classify(data, repres)
 
-    write = True
-    if write:
-        y = clustering.labels
-        # print(X.columns)
-        X['cluster'] = pd.Series(y, index=X.index)
+    n_clusters = labels.max() + 1
+    partition = lambda k: data[labels == k]
+    similarities = [pairwise_distances(partition(k)) for k in range(n_clusters)]
+    sim_users = [X["uuid"][labels == k] for k in range(n_clusters)]
 
-        users = X[["uuid", "cluster"]]
-        users.to_csv("data/csv_files/clusters.csv")
-
-
-def write_user_cluster_cure(X):
-    write = True
-    if not write:
-        return
-
-    X_no_uuid = X.drop(['uuid'], axis=1)
-    clustering = cure_clustering(X_no_uuid.values)
-    labelset = clustering.labels
-
-    def partitions():
-        for k in range(clustering.partition_num):
-            mask = labelset == k
-            yield X.values[mask], mask
-
-    def similarities():
-        for partition in partitions():
-            values, mask = partition
-            n = values.shape[0]
-            matrix = np.zeros((n, n))
-            for i, p in enumerate(values):
-                for j, q in enumerate(values):
-                    matrix[i, j] = distance(p, q)
-            ids = X[mask]['uuid'].values
-            yield ids, matrix
-
-    out = list(similarities())
-
-    with open("data/csv_files/clusters_cure.json", "w") as outfile:
-        outfile.write(
-            json.dumps(out)
-        )
+    i = 0
+    for (sim, u) in zip(similarities, sim_users):
+        with open(f"data/csv_files/clusters_cure_{i}.json", "w") as outfile:
+            outfile.write(
+                json.dumps({
+                    "similarity": sim.tolist(),
+                    "users": u.tolist()
+                })
+            )
+        i += 1
 
 
 #
