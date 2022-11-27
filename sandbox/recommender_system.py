@@ -74,20 +74,27 @@ def get_difficulty(time,max_time,is_correct,alpha=0.8):
     difficulty = 1-((max_time - time) / max_time)*alpha - beta*is_correct
     return difficulty
 
-def split_data(users,problems,random=False):
-    if random:
-        pr_test = random.choices(problems.index.to_list(),k=int(len(problems.index.to_list())/5))
-    else:
-        pr_sorted = problems.sort_values(by='timestamp_TW')
-        test_index = []
-        for user in tqdm(users['uuid'].to_list()):
-            pr_user = pr_sorted[pr_sorted['uuid']==user]
-            num_pr = len(pr_user)
-            num_train = int(num_pr*0.8)
-            if num_pr > 1:
-                test_index.append(pr_user.index.to_list()[num_train:])
-        pr_test = [item for sublist in test_index for item in sublist]
-    return pr_test
+def split_data(problems):
+    # Sort problems by timestamp - make sure that we only consider problems for the relevant users!
+    pr_user = problems.sort_values(by='timestamp_TW',ascending=False)
+    # Find out how many problems each user have attempted
+    prob_per_user = pr_user.groupby('uuid').size()
+    # Find 80 % quantile of how many problems each user have attempted
+    cutoff_problems = np.sort(prob_per_user.to_numpy())[int(len(prob_per_user)*0.8)]
+    # Index of all users that have attempted 'cutoff_problems' or more problems
+    user_idx = prob_per_user[prob_per_user>=cutoff_problems].index
+    # Find out how many users have attempted each problem
+    solved_per_prob = pr_user.groupby('upid').size()
+    # Find 80 % quantile of how many users have attempted each problem
+    cutoff_users = np.sort(solved_per_prob.to_numpy())[int(len(solved_per_prob) * 0.8)]
+    # Index of all problems where cutoff_users or more users have attempted the problem
+    prob_idx = solved_per_prob[solved_per_prob>=cutoff_users].index
+    # Filter data frame on both users and problems
+    user_sample = pr_user[pr_user['uuid'].isin(user_idx)]
+    prob_sample = user_sample[user_sample['upid'].isin(prob_idx)]
+    # Sample the last 5 attempted problems for each filtered user
+    test_index = prob_sample.groupby('uuid').head(int(cutoff_problems/5)).index.to_list()
+    return test_index
 
 def get_utility_matrix_shape(clusters,df_pr,subset=False):
     if subset:
@@ -104,8 +111,8 @@ def get_utility_matrix_shape(clusters,df_pr,subset=False):
         return clusters.shape[0], len(df_pr['upid'].unique())
 
 
-def generate_utility_matrix_for_one_cluster(clusters,cluster_id,df_u_full,df_pr_full,test_index):
-    cluster = clusters.loc[clusters['cluster'] == cluster_id]
+def generate_utility_matrix_for_one_cluster(clusters,cluster_id,df_u_full,df_pr_full):
+    cluster = clusters.loc[clusters['labels'] == cluster_id]
     sub_users = df_u_full['uuid'].isin(cluster['uuid'].to_list())
     df_u_sub = df_u_full.loc[sub_users]
     #TODO make sure that the faster implementation is correct
@@ -117,6 +124,7 @@ def generate_utility_matrix_for_one_cluster(clusters,cluster_id,df_u_full,df_pr_
     # sub_problems = df_pr_full['upid'].isin(problems)
     # df_pr_sub = df_pr_full.loc[sub_problems]
     df_pr_sub = df_pr_full.loc[df_pr_full['uuid'].isin(df_u_sub['uuid'])]
+    test_index = split_data(df_pr_sub)
     M, M_test, unique_prob_ids = construct_util_matrix(df_u_sub, df_pr_sub,test_index)
     return M, M_test, df_u_sub['uuid'], unique_prob_ids
 

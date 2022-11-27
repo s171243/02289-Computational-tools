@@ -18,6 +18,7 @@ def log(msg):
 # TODO just copy the code from cure.py here
 
 def bind_labels_and_uuid(cluster_labels,sim_users):
+    # Something is wrong here
     clusters = pd.DataFrame([cluster_labels, sim_users]).T
     clusters.columns = ["labels", "uuid"]
     return clusters
@@ -67,34 +68,29 @@ def main():
     else:
         clusters = bind_labels_and_uuid(cluster_labels,sim_users)
 
-    #
-    #test_index = split_data(df_u, df_pr)
     if RUN_ALL_SPLITS:
         mean_errors = []
         for cluster_idx, clusters_ in enumerate(all_segment_clusters):
             df_u_split = dfs[cluster_idx]
             df_p_split = df_pr.loc[df_pr['uuid'].isin(df_u_split['uuid'])]
-            test_index = split_data(df_u_split, df_p_split)
-            mean_abs_error,recommendation_difficulty_for_all_users, recommendation_idx_all = run_and_evaluate_recommender_system(clusters_, df_pr, df_u, test_index,cluster_idx)
+            mean_abs_error,recommendation_difficulty_for_all_users, recommendation_idx_all = run_and_evaluate_recommender_system(clusters_, df_pr, df_u,cluster_idx)
             mean_errors.append(mean_abs_error)
         print("Mean absolute errors for the different splits {}".format(mean_errors))
     else:
         if SPLIT_USERS:
             df_u_split = dfs[0]
             df_p_split = df_pr.loc[df_pr['uuid'].isin(df_u_split['uuid'])]
-            test_index = split_data(df_u_split, df_p_split)
-            mean_abs_error, recommendation_difficulty_for_all_users, recommendation_idx_all = run_and_evaluate_recommender_system(clusters, df_pr, df_u, test_index)
+            mean_abs_error, recommendation_difficulty_for_all_users, recommendation_idx_all = run_and_evaluate_recommender_system(clusters, df_pr, df_u)
         else:
-            test_index = split_data(df_u, df_pr)
-            mean_abs_error,recommendation_difficulty_for_all_users, recommendation_idx_all = run_and_evaluate_recommender_system(clusters, df_pr, df_u, test_index)
+            mean_abs_error,recommendation_difficulty_for_all_users, recommendation_idx_all = run_and_evaluate_recommender_system(clusters, df_pr, df_u)
     pass
     # TODO Generate utility matrix for each cluster - and save.
 
 
-def run_and_evaluate_recommender_system(clusters, df_pr, df_u, test_index,cluster_id=0):
+def run_and_evaluate_recommender_system(clusters, df_pr, df_u,cluster_id=0):
     M, M_test, U1_ids, P1_ids = generate_utility_matrix_for_one_cluster(clusters=clusters,
                                                                         df_u_full=df_u, df_pr_full=df_pr,
-                                                                        cluster_id=cluster_id, test_index=test_index)
+                                                                        cluster_id=cluster_id)
     difficulties_for_all_users, errors_all = get_psedu_problem_difficulties(M, M_test)
     errors = [item for sublist in errors_all for item in sublist]
     mean_abs_error = np.mean(errors)
