@@ -44,20 +44,12 @@ def main():
     data = X.drop(columns=["uuid"]).to_numpy()
     cure_repres = cure_representatives(data)
     labels = cure_classify(data, cure_repres)
-    log("CURE Classification done")
-
-    dbi_cure = davies_bouldin_score(data, labels)
-    log(f"davies_bouldin_score CURE: {dbi_cure}")
-
-    log("Comparing with kmeans")
-    kmeans = KMeans(n_clusters=5, random_state=0, max_iter=500).fit(data)
-    dbi_kmeans = davies_bouldin_score(data, kmeans.labels_)
-    log(f"davies_bouldin_score Kmeans: {dbi_kmeans}")
+    log("CURE Classification: done")
 
     n_clusters = labels.max() + 1
     partition = lambda k: data[labels == k]
     similarities = [pairwise_distances(partition(k)) for k in range(n_clusters)]
-    # TODO users for similarity
+    sim_users = [X["uuid"][labels == k] for k in range(n_clusters)]
     log("Similarity matrices calculated")
 
 
