@@ -1,7 +1,8 @@
-import numpy as np
+import numpy as np,random
 from sklearn.cluster import KMeans, DBSCAN
 from sklearn.metrics.pairwise import pairwise_distances
-
+random.seed(3)
+np.random.seed(3)
 """ Sample size for initial clustering """
 CURE_SAMPLE = lambda size: int(size / 5) if size < 1000 else int(size / 50)
 

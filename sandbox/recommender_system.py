@@ -129,28 +129,41 @@ def generate_utility_matrix_for_one_cluster(clusters,cluster_id,df_u_full,df_pr_
     return M, M_test, df_u_sub['uuid'], unique_prob_ids
 
 
-def get_psedu_problem_difficulties(M, M_test):
-    # Now that we have a utility matrix, we need to fill all empty entries
+def get_psedu_problem_difficulties(M, M_test,user_user_similarities_matrix,use_user_user_similarity):
+    #TODO incoorporate user_user_similarities, by withdrawing the correct vector, and sent it to the get_pseudo_problem
     errors = []
     recommendations = np.zeros_like(M)  # Create copy of utility matrix, so that 'predictions' are not used when aggregating
-    for user in tqdm(range(np.shape(M)[0]),desc="get_psedu_problem_difficulties()"):
-        recommendations[user, :], error = get_psedu_problem_difficulties_for_single_user(user, M, M_test)
+    for user_idx in tqdm(range(np.shape(M)[0]),desc="get_psedu_problem_difficulties()"):
+        user_similarity_vec = user_user_similarities_matrix[user_idx,:]
+        recommendations[user_idx, :], error = get_psedu_problem_difficulties_for_single_user(user_idx, M, M_test,user_similarity_vec,use_user_user_similarity)
         errors.append(error)
     return recommendations, errors
 
-def get_psedu_problem_difficulties_for_single_user(user_idx, M, M_test):
+
+
+def get_psedu_problem_difficulties_for_single_user(user_idx, M, M_test,user_sim_vector,use_user_user_similarity=False):
     # Now that we have a utility matrix, we need to fill all empty entries
     #M2 = np.copy(M)  # Create copy of utility matrix, so that 'predictions' are not used when aggregating
     n_user = np.shape(M)[0]
     n_problems = np.shape(M)[1]
     user_recommendations = np.zeros(n_problems)
-    unsolved_problems = np.argwhere(M_test[user_idx, :] != 0.0)
+    unsolved_problems = np.argwhere( M[user_idx, :] == 0.0)
     unsolved_problems = [u[0] for u in unsolved_problems]
     relevant_user_ids = list(range(0,user_idx))+list(range(user_idx+1,n_user))
     relevant_M = M[relevant_user_ids,:][:,unsolved_problems]
-    user_recommendations[unsolved_problems] = np.sum(relevant_M, axis=0) / np.sum(relevant_M != 0, axis=0)
+    if use_user_user_similarity:
+        #We need to turn distance measures into similarity, which is done by subtracting the distance from the maximum distance and normalizing
+        relevant_user_sim_vector = user_sim_vector[relevant_user_ids].max()-user_sim_vector[relevant_user_ids]
+        relevant_user_sim_vector =  ( relevant_user_sim_vector - np.min(relevant_user_sim_vector) ) / np.std(relevant_user_sim_vector)
+        #Next we want want to weight the non-zero inputs, such that the weights are equal to 1, to keep the scale of the difficuly.
+        weight_scale =  relevant_user_sim_vector @ (relevant_M > 0)
+        user_recommendations[unsolved_problems] = np.dot(relevant_user_sim_vector,relevant_M) / weight_scale #np.sum(relevant_M != 0, axis=0)
+    else:
+        user_recommendations[unsolved_problems] = np.sum(relevant_M, axis=0) / np.sum(relevant_M != 0, axis=0)
+
     user_recommendations[np.isnan(user_recommendations)] = 0
-    errors = np.abs(user_recommendations[unsolved_problems]-M_test[user_idx,unsolved_problems])
+    test_idx = M_test[user_idx, :].nonzero()
+    errors = np.abs(user_recommendations[test_idx]-M_test[user_idx,test_idx])
     return user_recommendations, errors
 
 def get_recommendation(difficulty_matrix,quantile=0.80,recommendations_to_return = 1):
