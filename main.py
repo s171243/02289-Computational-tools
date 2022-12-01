@@ -46,7 +46,7 @@ def main():
 
     SPLIT_USERS = True
     RUN_ALL_SPLITS = True
-    USE_USER_USER_SIMILARITY = False
+    USE_USER_USER_SIMILARITY = True
     split_idx = 0
     if RUN_ALL_SPLITS:
         all_split_labels = []
@@ -59,7 +59,6 @@ def main():
         del X
         for df, label in zip(dfs, labels):
             if split_idx < 1 or RUN_ALL_SPLITS:
-                # INSERT CLUSTERING AND OTHER STUFF HERE
                 log("Getting clusters for {} users...".format(label))
                 cluster_labels, similarities, sim_users = get_clusters_and_similarity_matrix(df)
                 split_idx += 1
@@ -90,9 +89,9 @@ def main():
             for cluster_idx in tqdm(range(len(similarities_)),desc="running cluster"):
                 mean_abs_error,errors,recommendation_difficulty_for_all_users, recommendation_idx_all,mean_difficulty = run_and_evaluate_recommender_system(clusters_, df_p_split, df_u_split,similarities_,cluster_idx,USE_USER_USER_SIMILARITY)
                 mean_errors.append(mean_abs_error)
-                with open('data/evaluation_results/eval_mean_errors.txt', 'a') as f:
+                with open('data/evaluation_results/eval_mean_errors_5splits.txt', 'a') as f:
                     f.write("split_id: {},split_size: {}, cluster_id: {},cluster_u_size {}, n_errors: {}, mean_error: {}, mean_difficulty: {}, mean_recommendation_difficulty: {}\n".format(split_idx,df_u_split.shape[0],cluster_idx,similarities_[cluster_idx].shape[0],len(errors),np.round(mean_abs_error,5),np.round(mean_difficulty,5),np.round(np.mean(recommendation_difficulty_for_all_users),5)))
-                with open('data/evaluation_results/eval_errors.txt', 'a') as f:
+                with open('data/evaluation_results/eval_error_5splitss.txt', 'a') as f:
                     f.write("split_id: {}, cluster_id: {}, errors {}\n".format(split_idx,cluster_idx,errors))
         print("Mean absolute errors for the different splits {}".format(mean_errors))
     else:
