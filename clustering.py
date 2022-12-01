@@ -131,10 +131,20 @@ def visualize_with_PCA(X, optimal_clusters=3, label=""):
 
 
 def split_users(df):
-    young = df[df["user_grade"] < 4]
-    medium = df[(df["user_grade"] >= 4) & (df["user_grade"] < 8)]
-    old = df[df["user_grade"] >= 8]
-    return [young, medium, old], ["young", "middle", "old"]
+    """
+    split users based on user_grade
+    :param df:
+    :return:
+    """
+    split1 = df[df["user_grade"] < 4]
+    split2 = df[df["user_grade"] == 5]
+    split3 = df[df["user_grade"] == 6]
+    split4 = df[df["user_grade"] == 7]
+    split5 = df[df["user_grade"] > 7]
+    # young = df[df["user_grade"] < 5]
+    # medium = df[(df["user_grade"] >= 5) & (df["user_grade"] < 7)]
+    # old = df[df["user_grade"] >= 7]
+    return [split1,split2,split3,split4,split5], ["split1","split2","split3","split4","split5"]
 
 
 def cluster_main():

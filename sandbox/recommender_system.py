@@ -52,10 +52,11 @@ def construct_util_matrix(users,problems,test_index):
             max_ = np.max(user_difficulties)
             M[i,user_prob_idx] = (M[i,user_prob_idx] - min_) / (max_)
             # Save 'true' difficulty measures and remove from utility matrix
-            for idx in user_prob_idx:
-                if idx in test_index:
-                    M_test[i, idx] = M[i, idx]
-                    M[i, idx] = 0.0
+            for idx, prob_idx in enumerate(user_problems.index.to_list()):
+                if prob_idx in test_index:
+                    M_idx = user_prob_idx[idx]
+                    M_test[i, M_idx] = M[i, M_idx]
+                    M[i, M_idx] = 0.0
         else:
             #M = np.delete(M, i, axis=0)
             pass
@@ -133,7 +134,7 @@ def get_psedu_problem_difficulties(M, M_test,user_user_similarities_matrix,use_u
     #TODO incoorporate user_user_similarities, by withdrawing the correct vector, and sent it to the get_pseudo_problem
     errors = []
     recommendations = np.zeros_like(M)  # Create copy of utility matrix, so that 'predictions' are not used when aggregating
-    for user_idx in tqdm(range(np.shape(M)[0]),desc="get_psedu_problem_difficulties()"):
+    for user_idx in tqdm(range(np.shape(M)[0]),desc="Func: get_psedu_problem_difficulties()"):
         user_similarity_vec = user_user_similarities_matrix[user_idx,:]
         recommendations[user_idx, :], error = get_psedu_problem_difficulties_for_single_user(user_idx, M, M_test,user_similarity_vec,use_user_user_similarity)
         errors.append(error)
