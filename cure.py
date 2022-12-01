@@ -47,11 +47,7 @@ def _cure_initial_clustering(sample: np.ndarray):
 
     # intentionally not using AgglomerativeClustering
     sample_len = len(sample)
-    correction = 1.0
-    if sample_len > 1000:
-        correction = 0.5
-    if 100 <= sample_len <= 999:
-        correction = 0.2
+    correction = 0.5 if sample_len > 700 else 0.3
     eps = correction * eps_calculation()
     labels = DBSCAN(eps=eps, min_samples=10).fit(sample)
     return labels.labels_

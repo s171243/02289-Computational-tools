@@ -67,23 +67,22 @@ class U_features():
         self.features_to_be_OH_encoded = features_to_be_OH_encoded
         self.features_meta = features_meta
 
-
 def evaluate_clusterings(combined):
     for df, split, labels in combined:
-        df = df.drop(columns=["uuid"])
+        df = df.drop(columns=["uuid", "first_login_date_TW"])
         data = df.to_numpy()
-        print(f"Split: {split}")
-        print("Davies-Bouldin score: ", davies_bouldin_score(data, labels))
+        print(f"Split: {split} | Davies-Bouldin score: ", davies_bouldin_score(data, labels))
         centroids = [np.average(data[labels == k], axis=0) for k in range(labels.max() + 1)]
 
         def interesting_columns(x: np.ndarray):
-            return list(filter(lambda pair: pair[1] > 0.05, zip(df.columns, x)))
+            return list(filter(lambda pair: pair[1] > 0.07, zip(df.columns, x)))
 
         c0 = centroids[0]
+        print(f"Centroid differences (for {len(centroids)} clusters):")
         for i in range(1, len(centroids)):
             c1 = centroids[i]
             cdiff = interesting_columns(c0 - c1)
-            print("Centroid difference: ", cdiff)
+            print(cdiff)
 
 
 def main():
