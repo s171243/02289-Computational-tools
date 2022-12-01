@@ -1,4 +1,6 @@
 import time,random, pickle
+
+import numpy as np
 import pandas as pd
 from clustering import split_users
 from cure import *
@@ -41,7 +43,7 @@ def main():
 
     SPLIT_USERS = True
     RUN_ALL_SPLITS = False
-    USE_USER_USER_SIMILARITY = True
+    USE_USER_USER_SIMILARITY = False
     split_idx = 0
     if RUN_ALL_SPLITS:
         all_split_labels = []
@@ -93,12 +95,17 @@ def main():
         if SPLIT_USERS: #Split data and run the first cluster on the first split
             # TODO update arguments such that it only uses df_u_split or df_u, and df_p_split or df_p, should there exist a for loop iterating over cluster_idx?
             #Select the first data related to third split
-            df_u_split = dfs[2]
-            df_p_split = df_pr.loc[df_pr['uuid'].isin(df_u_split['uuid'])]
+            #df_u_split = dfs[2]
+            #df_p_split = df_pr.loc[df_pr['uuid'].isin(df_u_split['uuid'])]
             #Select what cluster to evaluate
-            cluster_idx = 2
-            mean_abs_error, recommendation_difficulty_for_all_users, recommendation_idx_all = run_and_evaluate_recommender_system(clusters, df_p_split, df_u_split,similarities,cluster_idx,USE_USER_USER_SIMILARITY)
-            print(mean_abs_error)
+            cluster_idx = 0
+            for i in range(2):
+                if i == 0:
+                    USE_USER_USER_SIMILARITY = True
+                else:
+                    USE_USER_USER_SIMILARITY = False
+                mean_abs_error, recommendation_difficulty_for_all_users, recommendation_idx_all = run_and_evaluate_recommender_system(clusters, df_pr, df_u,similarities,cluster_idx,USE_USER_USER_SIMILARITY)
+                print(mean_abs_error)
         else:
             # TODO update arguments such that it only uses df_u_split or df_u, and df_p_split or df_p, what about idx?
             cluster_idx = 0
@@ -134,10 +141,11 @@ def run_and_evaluate_recommender_system(clusters, df_pr, df_u,user_user_similari
 
     cluster_user_user_similarity = user_user_similarities[cluster_id]
     difficulties_for_all_users, errors_all = get_psedu_problem_difficulties(M, M_test,cluster_user_user_similarity,use_user_user_similarity)
-    errors = [item for sublist in errors_all for item in sublist if len(item) > 0]
+    errors = [item[0] for sublist in errors_all for item in sublist if len(item) > 0]
     mean_abs_error = np.mean(errors)
     recommendation_difficulty_for_all_users, recommendation_idx_all = get_recommendation(difficulties_for_all_users)
-    print("Mean absolute error of difficulty was {} for cluster {}".format(mean_abs_error,cluster_id))
+    num_users = clusters.loc[clusters['labels'] == cluster_id].shape[0]
+    print("Mean absolute error of difficulty was {} for cluster {} with {} users and use_similarrity={}".format(mean_abs_error,cluster_id,num_users,str(use_user_user_similarity)))
     return mean_abs_error,recommendation_difficulty_for_all_users, recommendation_idx_all
 
 def get_clusters_and_similarity_matrix(df: pd.DataFrame):
