@@ -107,13 +107,8 @@ def main():
             #df_p_split = df_pr.loc[df_pr['uuid'].isin(df_u_split['uuid'])]
             #Select what cluster to evaluate
             cluster_idx = 0
-            for i in range(2):
-                if i == 0:
-                    USE_USER_USER_SIMILARITY = True
-                else:
-                    USE_USER_USER_SIMILARITY = False
-                mean_abs_error, recommendation_difficulty_for_all_users, recommendation_idx_all = run_and_evaluate_recommender_system(clusters, df_pr, df_u,similarities,cluster_idx,USE_USER_USER_SIMILARITY)
-                print(mean_abs_error)
+            mean_abs_error, recommendation_difficulty_for_all_users, recommendation_idx_all = run_and_evaluate_recommender_system(clusters, df_pr, df_u,similarities,cluster_idx,USE_USER_USER_SIMILARITY)
+            print(mean_abs_error)
         else:
             # TODO update arguments such that it only uses df_u_split or df_u, and df_p_split or df_p, what about idx?
             cluster_idx = 0
@@ -148,6 +143,7 @@ def run_and_evaluate_recommender_system(clusters, df_pr, df_u,user_user_similari
     M, M_test, U1_ids, P1_ids = generate_utility_matrix_for_one_cluster(clusters=clusters,df_u_full=df_u, df_pr_full=df_pr,cluster_id=cluster_id)
 
     cluster_user_user_similarity = user_user_similarities[cluster_id]
+
     difficulties_for_all_users, errors_all = get_psedu_problem_difficulties(M, M_test,cluster_user_user_similarity,use_user_user_similarity)
     errors = [item[0] for sublist in errors_all for item in sublist if len(item) > 0]
     mean_abs_error = np.mean(errors)
