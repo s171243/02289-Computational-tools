@@ -1,5 +1,6 @@
 import time,random, pickle
 import pandas as pd
+from tqdm import tqdm
 from clustering import split_users
 from cure import *
 from data.data_loader import load_data_raw
@@ -40,8 +41,8 @@ def main():
     X: pd.DataFrame = preprocess_df(df=X, o_features=user_features)
 
     SPLIT_USERS = True
-    RUN_ALL_SPLITS = False
-    USE_USER_USER_SIMILARITY = True
+    RUN_ALL_SPLITS = True
+    USE_USER_USER_SIMILARITY = False
     split_idx = 0
     if RUN_ALL_SPLITS:
         all_split_labels = []
@@ -65,7 +66,6 @@ def main():
             else:
                 break
     else:
-        # INSERT CLUSTERING AND OTHER STUFF HERE
         log("Getting clusters for all users...")
         cluster_labels, similarities, sim_users = get_clusters_and_similarity_matrix(X)
 
@@ -74,6 +74,7 @@ def main():
     #and for each split we have clusters. Each split will therefore have cluster_labels, similarities and sim_users
     if RUN_ALL_SPLITS:
         # TODO update arguments such that it only uses df_u_split or df_u, and df_p_split or df_p
+        log("Binding clusters labels and uuids for all splits")
         all_segment_clusters = [bind_labels_and_uuid(c_labels,s_users) for (c_labels,s_users) in zip(all_split_labels,all_split_sim_users)]
     else:
         clusters = bind_labels_and_uuid(cluster_labels,sim_users)
@@ -81,13 +82,20 @@ def main():
     if RUN_ALL_SPLITS: # Run all splits, and all clusters
         mean_errors = []
         for split_idx, clusters_ in enumerate(all_segment_clusters):
-            # TODO update arguments such that it only uses df_u_split or df_u, and df_p_split or df_p
-            df_u_split = dfs[split_idx]
-            df_p_split = df_pr.loc[df_pr['uuid'].isin(df_u_split['uuid'])]
-            similarities_ = all_split_similarities[split_idx]
-            for cluster_idx in range(len(clusters_)):
-                mean_abs_error,recommendation_difficulty_for_all_users, recommendation_idx_all = run_and_evaluate_recommender_system(clusters_, df_p_split, df_u_split,similarities_,cluster_idx,USE_USER_USER_SIMILARITY)
-                mean_errors.append(mean_abs_error)
+            if split_idx == 1:
+                break
+            else:
+                # TODO update arguments such that it only uses df_u_split or df_u, and df_p_split or df_p
+                df_u_split = dfs[split_idx]
+                df_p_split = df_pr.loc[df_pr['uuid'].isin(df_u_split['uuid'])]
+                similarities_ = all_split_similarities[split_idx]
+                for cluster_idx in tqdm(range(len(similarities_)),desc="running cluster"):
+                    mean_abs_error,errors,recommendation_difficulty_for_all_users, recommendation_idx_all = run_and_evaluate_recommender_system(clusters_, df_p_split, df_u_split,similarities_,cluster_idx,USE_USER_USER_SIMILARITY)
+                    mean_errors.append(mean_abs_error)
+                    with open('data/evaluation_results/eval_mean_errors.txt', 'a') as f:
+                        f.write("segment: {}, cluster: {}, n_errors {}, mean_error {}\n".format(split_idx,cluster_idx,len(errors),mean_abs_error))
+                    with open('data/evaluation_results/eval_errors.txt', 'a') as f:
+                        f.write("segment: {}, cluster: {}, errors {}\n".format(split_idx,cluster_idx,errors))
         print("Mean absolute errors for the different splits {}".format(mean_errors))
     else:
         if SPLIT_USERS: #Split data and run the first cluster on the first split
@@ -97,12 +105,12 @@ def main():
             df_p_split = df_pr.loc[df_pr['uuid'].isin(df_u_split['uuid'])]
             #Select what cluster to evaluate
             cluster_idx = 2
-            mean_abs_error, recommendation_difficulty_for_all_users, recommendation_idx_all = run_and_evaluate_recommender_system(clusters, df_p_split, df_u_split,similarities,cluster_idx,USE_USER_USER_SIMILARITY)
+            mean_abs_error, errors,recommendation_difficulty_for_all_users, recommendation_idx_all = run_and_evaluate_recommender_system(clusters, df_p_split, df_u_split,similarities,cluster_idx,USE_USER_USER_SIMILARITY)
             print(mean_abs_error)
         else:
             # TODO update arguments such that it only uses df_u_split or df_u, and df_p_split or df_p, what about idx?
             cluster_idx = 0
-            mean_abs_error,recommendation_difficulty_for_all_users, recommendation_idx_all = run_and_evaluate_recommender_system(clusters, df_pr, df_u,similarities,cluster_idx,USE_USER_USER_SIMILARITY)
+            mean_abs_error,errors,recommendation_difficulty_for_all_users, recommendation_idx_all = run_and_evaluate_recommender_system(clusters, df_pr, df_u,similarities,cluster_idx,USE_USER_USER_SIMILARITY)
     pass
     # TODO Generate utility matrix for each cluster - and save.
 
@@ -135,10 +143,11 @@ def run_and_evaluate_recommender_system(clusters, df_pr, df_u,user_user_similari
     cluster_user_user_similarity = user_user_similarities[cluster_id]
     difficulties_for_all_users, errors_all = get_psedu_problem_difficulties(M, M_test,cluster_user_user_similarity,use_user_user_similarity)
     errors = [item for sublist in errors_all for item in sublist if len(item) > 0]
+    print("trying to calculate mean with error values; ", errors)
     mean_abs_error = np.mean(errors)
     recommendation_difficulty_for_all_users, recommendation_idx_all = get_recommendation(difficulties_for_all_users)
-    print("Mean absolute error of difficulty was {} for cluster {}".format(mean_abs_error,cluster_id))
-    return mean_abs_error,recommendation_difficulty_for_all_users, recommendation_idx_all
+    print("Mean absolute error of difficulty was {} for cluster {} with {} errors".format(mean_abs_error,cluster_id,len(errors)))
+    return mean_abs_error,errors,recommendation_difficulty_for_all_users, recommendation_idx_all
 
 def get_clusters_and_similarity_matrix(df: pd.DataFrame):
     log("CURE Classification...")

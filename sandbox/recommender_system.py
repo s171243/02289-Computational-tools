@@ -80,13 +80,13 @@ def split_data(problems):
     # Find out how many problems each user have attempted
     prob_per_user = pr_user.groupby('uuid').size()
     # Find 80 % quantile of how many problems each user have attempted
-    cutoff_problems = np.sort(prob_per_user.to_numpy())[int(len(prob_per_user)*0.8)]
+    cutoff_problems = np.sort(prob_per_user.to_numpy())[int(len(prob_per_user)*0.7)]
     # Index of all users that have attempted 'cutoff_problems' or more problems
     user_idx = prob_per_user[prob_per_user>=cutoff_problems].index
     # Find out how many users have attempted each problem
     solved_per_prob = pr_user.groupby('upid').size()
     # Find 80 % quantile of how many users have attempted each problem
-    cutoff_users = np.sort(solved_per_prob.to_numpy())[int(len(solved_per_prob) * 0.8)]
+    cutoff_users = np.sort(solved_per_prob.to_numpy())[int(len(solved_per_prob) * 0.7)]
     # Index of all problems where cutoff_users or more users have attempted the problem
     prob_idx = solved_per_prob[solved_per_prob>=cutoff_users].index
     # Filter data frame on both users and problems
