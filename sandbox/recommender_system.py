@@ -6,7 +6,6 @@ from sklearn.preprocessing import StandardScaler
 #from clustering import user_clustering_kmeans, visualize_with_PCA
 from data.data_loader import load_data_raw
 from data.data_preprocessing import extract_additional_user_features, preprocess_df
-from data.feature_categorization import U_features
 from collections import defaultdict
 
 def get_user_segments(users,no_implementation = True, n_segments = 10):

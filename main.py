@@ -3,11 +3,8 @@ import time
 import pandas as pd
 from tqdm import tqdm
 
-from clustering import split_users
 from cure import *
-from data.data_loader import load_data_raw
 from data.data_preprocessing import preprocess_df, extract_additional_user_features
-from data.feature_categorization import U_features
 from sandbox.recommender_system import generate_utility_matrix_for_one_cluster, get_recommendation, \
     get_psedu_problem_difficulties
 
@@ -23,6 +20,14 @@ def log(msg):
 
 # TODO just copy the code from cure.py here
 
+
+def load_data_raw():
+    df_u = pd.read_csv('data/csv_files/Info_UserData.csv')
+    df_pr = pd.read_csv('data/csv_files/Log_Problem.csv')
+    df_ex = pd.read_csv('data/csv_files/Info_Content.csv')
+    return df_u, df_pr, df_ex
+
+
 def bind_labels_and_uuid(cluster_labels, sim_users):
     cluster_partitions = [cluster_labels[cluster_labels == i] for i in range(cluster_labels.max() + 1)]
     clusters = pd.DataFrame([np.hstack(cluster_partitions), np.hstack(sim_users)]).T
@@ -36,9 +41,35 @@ def remove_problems_with_total_time_outliers(df_pr):
     return new_df_pr
 
 
+def split_users_by_grade(df):
+    split1 = df[df["user_grade"] < 4]
+    split2 = df[df["user_grade"] == 5]
+    split3 = df[df["user_grade"] == 6]
+    split4 = df[df["user_grade"] == 7]
+    split5 = df[df["user_grade"] > 7]
+    return [split1, split2, split3, split4, split5], ["split1", "split2", "split3", "split4", "split5"]
+
+
+class U_features():
+    def __init__(self,
+                 features=['user_grade', 'has_teacher_cnt', 'has_student_cnt', 'has_class_cnt',
+                           "correct_percentage", "problems_attempted", "average_level", "max_level",
+                           "average_hints", "avg_difficulty", "avg_learning_stage"],
+                 features_to_be_time_encoded=['first_login_date_TW'], features_to_be_OR_encoded=[],
+                 features_to_be_OH_encoded=['gender', 'user_city', 'is_self_coach'], features_meta=['uuid'],
+                 features_to_be_scaled=['points', "correct_percentage", "time_spent", 'belongs_to_class_cnt',
+                                        "badges_cnt"]):
+        self.features = features
+        self.features_to_be_time_encoded = features_to_be_time_encoded
+        self.features_to_be_scaled = features_to_be_scaled
+        self.features_to_be_OR_encoded = features_to_be_OR_encoded
+        self.features_to_be_OH_encoded = features_to_be_OH_encoded
+        self.features_meta = features_meta
+
+
 def main():
     log("Loading data...")
-    df_u, df_pr, df_c = load_data_raw(subset=False)
+    df_u, df_pr, df_c = load_data_raw()
     df_pr = remove_problems_with_total_time_outliers(df_pr)
 
     log("Feature extraction...")
@@ -59,7 +90,7 @@ def main():
 
     if SPLIT_USERS:
         log("Splitting users...")
-        dfs, labels = split_users(X)
+        dfs, labels = split_users_by_grade(X)
         del X
         for df, label in zip(dfs, labels):
             if split_idx < 1 or RUN_ALL_SPLITS:
