@@ -46,7 +46,7 @@ class MRWordFrequencyCount(MRJob):
             learning_stage = self.with_numpy(self.content, "learning_stage", "ucid", ucid)
             difficulty = self.with_numpy(self.content, "difficulty", "ucid", ucid)
             yield uuid, (int(data_row[7]), int(data_row[13]), is_correct, data_row[3],
-                                learning_stage, difficulty)
+                                learning_stage, difficulty, int(data_row[13]))
 
     def reducer(self, key, values):
         countt = 0
@@ -55,8 +55,9 @@ class MRWordFrequencyCount(MRJob):
         difficulty = []
         stages = []
         correct = []
+        hints = []
         problems = set()
-        for v, level, is_correct, upid, stage, diff in values:
+        for v, level, is_correct, upid, stage, diff, hint in values:
             countt += 1
             val.append(v)
             levels.append(level)
@@ -64,8 +65,9 @@ class MRWordFrequencyCount(MRJob):
             problems.add(upid)
             difficulty.append(diff)
             stages.append(stage)
+            hints.append(hint)
         yield key, (key, countt, sum(val) / countt, sum(levels) / countt, sum(correct) / countt, len(problems) / countt,
-                    max(levels), sum(stages) / countt, sum(difficulty) / countt)
+                    max(levels), sum(stages) / countt, sum(difficulty) / countt, sum(hints)/countt)
 
 
 current_cwd = os.getcwd()

@@ -1,5 +1,5 @@
 import warnings
-
+import os
 import numpy as np
 import pandas as pd
 from sklearn.preprocessing import OneHotEncoder, StandardScaler, MinMaxScaler, MaxAbsScaler
@@ -115,7 +115,6 @@ def one_hot_encode(df, column_names=['gender', 'is_self_coach']):
 
 def extract_additional_user_features(df_u, df_problems, df_content):
     """
-    not finished.
     intendend purpose: extract user features from problems. Potentially using map_reduce
     # exercise_per_level
     # avg_time_spend
@@ -156,7 +155,6 @@ def extract_additional_user_features(df_u, df_problems, df_content):
 
 def _extract_additional_user_features(df_u, df_problems, df_content):
     """
-    not finished.
     intendend purpose: extract user features from problems. Potentially using map_reduce
     # exercise_per_level
     # avg_time_spend
@@ -165,10 +163,11 @@ def _extract_additional_user_features(df_u, df_problems, df_content):
     :return:
     """
 
-    # os.system("python MapReduceSandbox.py data/csv_files/Log_Problem_subset.csv > data/csv_files/reduced.csv")
+    os.system("python sandbox/MapReduceSandbox.py data/csv_files/Log_Problem_subset.csv > data/csv_files/reduced.csv")
     reduced = pd.read_csv("data/csv_files/reduced.csv",
-                          names=["uuid", "problems_attempted", "total_sec_taken", "average_level", "correct_percentage",
-                                 "max_level", "difficulty", "learning_stage"])
+                          names=["uuid", "problems_attempted", "time_spent", "average_level", "correct_percentage",
+                                 "max_level", "avg_learning_stage", "avg_difficulty", "average_hints"], index_col=False)
+
 
     users = df_u.merge(reduced, left_on="uuid", right_on="uuid")
 
