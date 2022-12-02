@@ -137,7 +137,6 @@ def main():
                 f.write("split_id: {}, cluster_id: {}, errors {}\n".format(split_idx, cluster_idx, errors))
     print("Mean absolute errors for the different splits {}".format(mean_errors))
 
-    # TODO Generate utility matrix for each cluster - and save.
 
 
 def run_and_evaluate_recommender_system(clusters, df_pr, df_u, user_user_similarities, cluster_id=0,

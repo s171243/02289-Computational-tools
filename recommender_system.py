@@ -31,7 +31,6 @@ def construct_util_matrix(users,problems,test_index):
     for i, userID in enumerate(tqdm(users['uuid'],desc="Func: construct_util_matrix()")):
         user_problems = problems.loc[problems['uuid'] == userID]
         if not user_problems.empty:
-            #TODO handle outliers. Max time should probably not be defined like this or rather some outliers should be filtered away first.
             max_time = max(user_problems['total_sec_taken'])
             user_prob_idx = []
             user_difficulties = []
@@ -112,7 +111,7 @@ def generate_utility_matrix_for_one_cluster(clusters,cluster_id,df_u_full,df_pr_
     cluster = clusters.loc[clusters['labels'] == cluster_id]
     sub_users = df_u_full['uuid'].isin(cluster['uuid'].to_list())
     df_u_sub = df_u_full.loc[sub_users]
-    #TODO make sure that the faster implementation is correct
+
     #problems = []
     # for userID in tqdm(df_u_sub['uuid'],desc="Func: generate_utility_matrix_for_one_cluster()"):
     #     user_info = df_pr_full.loc[df_pr_full['uuid'] == userID]
@@ -127,7 +126,6 @@ def generate_utility_matrix_for_one_cluster(clusters,cluster_id,df_u_full,df_pr_
 
 
 def get_psedu_problem_difficulties(M, M_test,user_user_similarities_matrix,use_user_user_similarity):
-    #TODO incoorporate user_user_similarities, by withdrawing the correct vector, and sent it to the get_pseudo_problem
     errors = []
     recommendations = np.zeros_like(M)  # Create copy of utility matrix, so that 'predictions' are not used when aggregating
     for user_idx in tqdm(range(np.shape(M)[0]),desc="Func: get_psedu_problem_difficulties()"):
@@ -195,7 +193,6 @@ if __name__ == "__main__":
     #U = np.empty((rows,columns))
     test_index = split_data(df_u,df_pr)
 
-    #TODO Generate utility matrix for each cluster - and save.
     i = 0
     cluster_id = 3
     M, M_test, U1_ids, P1_ids = generate_utility_matrix_for_one_cluster(clusters=clusters,
@@ -211,12 +208,4 @@ if __name__ == "__main__":
     mean_abs_error = np.mean(errors)
     recommendation_difficulty_for_single_user, recommendation_idx_single = get_recommendation(difficulties_for_single_user)
     recommendation_difficulty_for_all_users,recommendation_idx_all = get_recommendation(difficulties_for_all_users)
-
-
-    #TODO 1. Implement difficulty function DONE
-    #TODO 2. construct utility matrix per user group using 1. then standardize across user DONE
-    #TODO 3. Calculate aggregate difficulty measures DONE
-    #TODO 4. Pick the X'th quantile and use for recommendation. Done
-    #TODO 5. Figure out how to evaluate SPLIT ON 10-20 % RECENTLY SOLVED PROBLEMS
-
 
