@@ -78,8 +78,9 @@ def evaluate_clusterings(combined):
         print(f"Centroid differences (for {len(centroids)} clusters):")
         for i in range(1, len(centroids)):
             c1 = centroids[i]
-            cdiff = interesting_columns(c0 - c1)
-            print(cdiff)
+            diff = interesting_columns(c0 - c1)
+            diff = sorted(diff, key=lambda p: p[1])[:3]
+            log(diff)
 
 
 def main():
