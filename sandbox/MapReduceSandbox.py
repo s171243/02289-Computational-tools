@@ -15,7 +15,6 @@ class MRWordFrequencyCount(MRJob):
     def __init__(self, args=None):
         super().__init__(args)
         self.content = None
-        self.users = None
 
     def with_numpy(self, df, col, col2, val=0):
         return df[col].to_numpy()[df[col2].to_numpy() == val].item()
@@ -27,12 +26,10 @@ class MRWordFrequencyCount(MRJob):
 
     def mapper_init(self):
         global current_cwd
-        self.users = pd.read_csv(current_cwd + "/data/csv_files/Info_UserData.csv", index_col="uuid")
         self.content = pd.read_csv(current_cwd + "/data/csv_files/Info_Content.csv")
         features = Ex_features()
         self.content = preprocess_df(self.content, features)
         # self.content[["learning_stage", "difficulty"]] = ordinal_encode(self.content, ["learning_stage", "difficulty"])
-        sys.stderr.write(self.users.size)
         sys.stderr.write(current_cwd.encode())
 
     def mapper(self, _, line):
