@@ -1,13 +1,12 @@
 import os
 import sys
 
-import numpy as np
 import pandas as pd
 from mrjob.job import MRJob
 from mrjob.step import MRStep
 from mr3px.csvprotocol import CsvProtocol
-from data.data_preprocessing import ordinal_encode, preprocess_df
-from data.feature_categorization import Ex_features
+from data_preprocessing import preprocess_df
+from feature_categorization import Ex_features
 
 
 class MRWordFrequencyCount(MRJob):

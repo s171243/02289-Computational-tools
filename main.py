@@ -5,8 +5,8 @@ from sklearn.metrics import davies_bouldin_score
 from tqdm import tqdm
 
 from cure import *
-from data.data_preprocessing import preprocess_df, extract_additional_user_features
-from sandbox.recommender_system import generate_utility_matrix_for_one_cluster, get_recommendation, \
+from data_preprocessing import preprocess_df, extract_additional_user_features
+from recommender_system import generate_utility_matrix_for_one_cluster, get_recommendation, \
     get_psedu_problem_difficulties
 
 random.seed(3)
@@ -19,13 +19,10 @@ def log(msg):
     print(f"[{t:.2f} min] {msg}")
 
 
-# TODO just copy the code from cure.py here
-
-
 def load_data_raw():
-    df_u = pd.read_csv('data/csv_files/Info_UserData.csv')
-    df_pr = pd.read_csv('data/csv_files/Log_Problem.csv')
-    df_ex = pd.read_csv('data/csv_files/Info_Content.csv')
+    df_u = pd.read_csv('data/Info_UserData.csv')
+    df_pr = pd.read_csv('data/Log_Problem.csv')
+    df_ex = pd.read_csv('data/Info_Content.csv')
     return df_u, df_pr, df_ex
 
 
@@ -130,13 +127,13 @@ def main():
             mean_abs_error, errors, recommendation_difficulty_for_all_users, recommendation_idx_all, mean_difficulty = run_and_evaluate_recommender_system(
                 clusters_, df_p_split, df_u_split, similarities_, cluster_idx, USE_USER_USER_SIMILARITY)
             mean_errors.append(mean_abs_error)
-            with open('data/evaluation_results/eval_mean_errors_5splits.txt', 'a') as f:
+            with open('data/evaluation/eval_mean_errors_5splits.txt', 'a') as f:
                 f.write(
                     "split_id: {},split_size: {}, cluster_id: {},cluster_u_size {}, n_errors: {}, mean_error: {}, mean_difficulty: {}, mean_recommendation_difficulty: {}\n".format(
                         split_idx, df_u_split.shape[0], cluster_idx, similarities_[cluster_idx].shape[0],
                         len(errors), np.round(mean_abs_error, 5), np.round(mean_difficulty, 5),
                         np.round(np.mean(recommendation_difficulty_for_all_users), 5)))
-            with open('data/evaluation_results/eval_error_5splitss.txt', 'a') as f:
+            with open('data/evaluation/eval_error_5splitss.txt', 'a') as f:
                 f.write("split_id: {}, cluster_id: {}, errors {}\n".format(split_idx, cluster_idx, errors))
     print("Mean absolute errors for the different splits {}".format(mean_errors))
 
@@ -145,29 +142,6 @@ def main():
 
 def run_and_evaluate_recommender_system(clusters, df_pr, df_u, user_user_similarities, cluster_id=0,
                                         use_user_user_similarity=False):
-    # fname_uniq_prob, fname_M, fnameM_test,fname_df_u_sub_uuids = 'data/pickle_files/unique_prob_ids.pkl', 'data/pickle_files/M.pkl', 'data/pickle_files/M_test.pkl', 'data/pickle_files/df_u_sub_uuids.pkl'
-    # files_exists = exists(fname_uniq_prob) and exists(fname_M) and exists(fnameM_test) and exists(fname_df_u_sub_uuids)
-    # if files_exists:
-    #     with open(fname_uniq_prob, 'rb') as file:
-    #         P1_ids = pickle.load(file)
-    #     with open(fnameM_test, 'rb') as file:
-    #         M_test = pickle.load(file)
-    #     with open(fname_M, 'rb') as file:
-    #         M = pickle.load(file)
-    #     with open(fname_df_u_sub_uuids, 'rb') as file:
-    #         U1_ids = pickle.load(file)
-    # else:
-    #     M, M_test, U1_ids, P1_ids = generate_utility_matrix_for_one_cluster(clusters=clusters,df_u_full=df_u, df_pr_full=df_pr,cluster_id=cluster_id)
-    #     if not files_exists:
-    #         with open(fname_uniq_prob, 'wb') as file:
-    #             pickle.dump(P1_ids,file)
-    #         with open(fname_M, 'wb') as file:
-    #             pickle.dump(M,file)
-    #         with open(fnameM_test, 'wb') as file:
-    #             pickle.dump(M_test,file)
-    #         with open(fname_df_u_sub_uuids, 'wb') as file:
-    #             pickle.dump(U1_ids,file)
-    ##OUTCOMMENT FOLLOWING line if you are using the files_exists logic to load rather than compute matrices
     M, M_test, U1_ids, P1_ids = generate_utility_matrix_for_one_cluster(clusters=clusters, df_u_full=df_u,
                                                                         df_pr_full=df_pr, cluster_id=cluster_id)
 

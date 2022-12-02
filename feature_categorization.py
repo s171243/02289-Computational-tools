@@ -1,6 +1,3 @@
-from data.data_loader import load_data_raw
-import pandas as pd
-
 """
 Define default way of dealing with columns for the data.
 _FEATURES:  are ready to be used for clustering/prediction out the box
@@ -9,6 +6,23 @@ _FEATURES_TO_BE_OR_ENCODED: columns need to be ordinally encoded
 _FEATURES_TO_BE_OH_ENCODED: columns need to be one-hot encoded
 _FEATURES_META: contains additional information on the object not directly relevant to the clustering/prediction tasks 
 """
+
+
+class U_features():
+    def __init__(self,
+                 features=['user_grade', 'has_teacher_cnt', 'has_student_cnt', 'has_class_cnt',
+                           "correct_percentage", "problems_attempted", "average_level", "max_level",
+                           "average_hints", "avg_difficulty", "avg_learning_stage"],
+                 features_to_be_time_encoded=['first_login_date_TW'], features_to_be_OR_encoded=[],
+                 features_to_be_OH_encoded=['gender', 'user_city', 'is_self_coach'], features_meta=['uuid'],
+                 features_to_be_scaled=['points', "correct_percentage", "time_spent", 'belongs_to_class_cnt',
+                                        "badges_cnt"]):
+        self.features = features
+        self.features_to_be_time_encoded = features_to_be_time_encoded
+        self.features_to_be_scaled = features_to_be_scaled
+        self.features_to_be_OR_encoded = features_to_be_OR_encoded
+        self.features_to_be_OH_encoded = features_to_be_OH_encoded
+        self.features_meta = features_meta
 
 
 class Pr_features():
@@ -36,9 +50,6 @@ class Ex_features():
         self.features_to_be_OR_encoded = features_to_be_OR_encoded
         self.features_to_be_OH_encoded = features_to_be_OH_encoded
         self.features_meta = features_meta
-
-
-
 
 
 if __name__ == "__main__":

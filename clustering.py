@@ -7,9 +7,9 @@ from sklearn.decomposition import PCA
 from sklearn.metrics import davies_bouldin_score
 
 from cure import *
-from data.data_loader import load_data_raw
-from data.data_preprocessing import preprocess_df, extract_additional_user_features
-from data.feature_categorization import U_features
+from data_loader import load_data_raw
+from data_preprocessing import preprocess_df, extract_additional_user_features
+from feature_categorization import U_features
 
 
 def david_bouldin(X, label=""):
@@ -129,6 +129,14 @@ def visualize_with_PCA(X, optimal_clusters=3, label=""):
     ax.w_zaxis.set_ticklabels([])
     plt.show()
 
+
+def split_users_by_grade(df):
+    split1 = df[df["user_grade"] < 4]
+    split2 = df[df["user_grade"] == 5]
+    split3 = df[df["user_grade"] == 6]
+    split4 = df[df["user_grade"] == 7]
+    split5 = df[df["user_grade"] > 7]
+    return [split1, split2, split3, split4, split5], ["split1", "split2", "split3", "split4", "split5"]
 
 
 def cluster_main():

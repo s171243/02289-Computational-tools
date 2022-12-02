@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 from sklearn.preprocessing import OneHotEncoder, StandardScaler, MinMaxScaler, MaxAbsScaler
 
-from data.data_visualization import plot_columns_of_df
+from data_visualization import plot_columns_of_df
 
 warnings.filterwarnings("ignore")
 
