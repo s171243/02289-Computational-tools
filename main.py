@@ -78,8 +78,9 @@ def evaluate_clusterings(combined):
         print(f"Centroid differences (for {len(centroids)} clusters):")
         for i in range(1, len(centroids)):
             c1 = centroids[i]
-            cdiff = interesting_columns(c0 - c1)
-            print(cdiff)
+            diff = interesting_columns(c0 - c1)
+            diff = sorted(diff, key=lambda p: p[1])[:3]
+            log(diff)
 
 
 def main():
@@ -137,7 +138,6 @@ def main():
                 f.write("split_id: {}, cluster_id: {}, errors {}\n".format(split_idx, cluster_idx, errors))
     print("Mean absolute errors for the different splits {}".format(mean_errors))
 
-    # TODO Generate utility matrix for each cluster - and save.
 
 
 def run_and_evaluate_recommender_system(clusters, df_pr, df_u, user_user_similarities, cluster_id=0,
