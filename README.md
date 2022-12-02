@@ -15,4 +15,4 @@ pip install -r requirements.txt
 
 ## Results
 
-The process and our results are described in the `submission.ipynb` notebook.
+The process and our results are described in the `submission_verbose.ipynb` notebook. To see some of the data exploration, see `exploration.ipynb`.
