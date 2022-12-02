@@ -42,6 +42,7 @@ def construct_util_matrix(users,problems,test_index):
                 is_correct = user_problems.loc[[j],'is_correct'].values[0]
                 user_difficulties.append(get_difficulty(time,max_time,is_correct))
                 M[i, problem_index] = user_difficulties[-1]
+
             #standardize difficulty values between [0,1]
             min_ = np.min(user_difficulties)
             max_ = np.max(user_difficulties)
